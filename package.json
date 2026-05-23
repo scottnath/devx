@@ -1,0 +1,53 @@
+{
+  "name": "@scottnath/devx",
+  "version": "0.0.0-development",
+  "description": "Shared dev tooling for scottnath repos (semantic-release, Storybook for Astro)",
+  "type": "module",
+  "workspaces": [
+    "astro"
+  ],
+  "scripts": {
+    "extract:rules": "node scripts/extract-release-rules.mjs",
+    "prepublishOnly": "npm run extract:rules",
+    "start": "npm run dev -w devx-site",
+    "storybook": "npm run storybook -w devx-site",
+    "typecheck": "npm run typecheck -w devx-site",
+    "build": "npm run build -w devx-site"
+  },
+  "exports": {
+    ".": "./release-config.mjs",
+    "./npm": "./release-config-npm.mjs"
+  },
+  "files": [
+    "release-config.mjs",
+    "release-config-npm.mjs",
+    "release-rules.mjs",
+    "release.config.mjs",
+    "docs",
+    "scripts"
+  ],
+  "dependencies": {
+    "@astrojs/check": "^0.9.9",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/github": "^12.0.6",
+    "@semantic-release/npm": "^13.1.5",
+    "@storybook-astro/framework": "^1.2.0",
+    "@storybook/builder-vite": "^10.4.1",
+    "astro": "^6.3.7",
+    "gitmojis": "^3.15.0",
+    "marked": "^15.0.12",
+    "semantic-release": "^25.0.3",
+    "semantic-release-gitmoji": "^1.6.9",
+    "storybook": "^10.4.1"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.3"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/scottnath/devx.git"
+  }
+}

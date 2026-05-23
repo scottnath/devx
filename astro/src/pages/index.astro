@@ -1,0 +1,11 @@
+---
+import Layout from '../layouts/Layout.astro';
+import readme from '../../../README.md?raw';
+import { marked } from 'marked';
+
+const html = marked.parse(readme);
+---
+
+<Layout title="@scottnath/devx">
+  <article set:html={html} />
+</Layout>

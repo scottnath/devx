@@ -1,0 +1,16 @@
+---
+interface Props {
+  name: string;
+}
+
+const { name } = Astro.props;
+---
+
+<p class="welcome">Welcome, {name}!</p>
+
+<style>
+  .welcome {
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+</style>
