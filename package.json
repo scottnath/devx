@@ -16,13 +16,16 @@
   },
   "exports": {
     ".": "./release-config.mjs",
-    "./npm": "./release-config-npm.mjs"
+    "./npm": "./release-config-npm.mjs",
+    "./storybook/astro-renderer": "./storybook/astro-renderer.ts",
+    "./storybook/preview": "./storybook/preview.ts"
   },
   "files": [
     "release-config.mjs",
     "release-config-npm.mjs",
     "release-rules.mjs",
     "release.config.mjs",
+    "storybook",
     "docs",
     "scripts"
   ],
@@ -32,6 +35,7 @@
     "@semantic-release/github": "^12.0.8",
     "@semantic-release/npm": "^13.1.5",
     "@storybook-astro/framework": "^1.2.0",
+    "@storybook-astro/renderer": "^1.2.0",
     "@storybook/builder-vite": "^10.4.1",
     "astro": "^6.3.7",
     "astro-seo": "^1.1.0",

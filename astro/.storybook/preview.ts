@@ -1,12 +1,3 @@
-import { definePreview } from '@storybook-astro/framework';
+import { defineAstroPreview } from '@scottnath/devx/storybook/preview';
 
-export default definePreview({
-  parameters: {
-    controls: {
-      matchers: {
-        color: /(background|color)$/i,
-        date: /Date$/i,
-      },
-    },
-  },
-});
+export default defineAstroPreview({});

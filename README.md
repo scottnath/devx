@@ -123,19 +123,22 @@ export default defineMain({
 **`.storybook/preview.ts`:**
 
 ```typescript
-import { definePreview } from '@storybook-astro/framework';
+import { defineAstroPreview } from '@scottnath/devx/storybook/preview';
 
-export default definePreview({
+export default defineAstroPreview({});
+```
+
+Optional: pass Storybook preview options (merged with Astro defaults):
+
+```typescript
+export default defineAstroPreview({
   parameters: {
-    controls: {
-      matchers: {
-        color: /(background|color)$/i,
-        date: /Date$/i,
-      },
-    },
+    layout: 'centered',
   },
 });
 ```
+
+Low-level renderer exports are also available at `@scottnath/devx/storybook/astro-renderer` if you need to customize preview wiring.
 
 **Example story (`src/components/Welcome.stories.ts`):**
 
