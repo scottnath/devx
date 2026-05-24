@@ -49,5 +49,8 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/scottnath/devx.git"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
