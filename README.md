@@ -2,14 +2,28 @@
 
 Shared dev tooling for scottnath repositories: semantic-release with gitmoji, Astro, and Storybook for Astro.
 
-Install as a devDependency. Tooling packages are bundled in `dependencies` and install transitively. Add `typescript` explicitly in your repo — it is not transitive.
+Install as a devDependency from [GitHub Packages](https://github.com/scottnath/devx/packages). Tooling packages are bundled in `dependencies` and install transitively. Add `typescript` explicitly in your repo — it is not transitive.
+
+**`.npmrc`:**
+
+```
+@scottnath:registry=https://npm.pkg.github.com
+```
+
+**Install:**
+
+```bash
+npm install -D @scottnath/devx
+```
+
+In GitHub Actions, use `registry-url: https://npm.pkg.github.com`, `scope: '@scottnath'`, and `NODE_AUTH_TOKEN` (typically `secrets.GITHUB_TOKEN` with `packages: read`).
 
 ## semantic-release
 
 Two presets:
 
 - `@scottnath/devx` — changelog + GitHub release (non-npm repos)
-- `@scottnath/devx/npm` — adds npm publish
+- `@scottnath/devx/npm` — adds GitHub Packages publish
 
 **GitHub-only release** (`release.config.mjs`):
 
@@ -18,7 +32,7 @@ Two presets:
 export default { extends: '@scottnath/devx' };
 ```
 
-**npm publish** (`release.config.mjs`):
+**GitHub Packages publish** (`release.config.mjs`):
 
 ```javascript
 /** @type {import('semantic-release').GlobalConfig} */
