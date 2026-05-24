@@ -1,3 +1,3 @@
-import { defineAstroPreview } from '@scottnath/devx/storybook/preview';
+import { defineAstroPreview } from '../../storybook/preview.ts';
 
 export default defineAstroPreview({});
