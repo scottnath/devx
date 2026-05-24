@@ -4,3 +4,5 @@ node_modules/
 .astro/
 dist/
 storybook-static/
+storybook-server/
+*.code-workspace

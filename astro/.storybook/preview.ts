@@ -1,6 +1,6 @@
-import type { Preview } from '@storybook-astro/framework';
+import { definePreview } from '@storybook-astro/framework';
 
-const preview: Preview = {
+export default definePreview({
   parameters: {
     controls: {
       matchers: {
@@ -9,6 +9,4 @@ const preview: Preview = {
       },
     },
   },
-};
-
-export default preview;
+});

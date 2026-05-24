@@ -109,25 +109,23 @@ export default defineConfig({});
 **`.storybook/main.ts`:**
 
 ```typescript
-import type { StorybookConfig } from '@storybook-astro/framework';
+import { defineMain } from '@storybook-astro/framework/node';
 
-const config: StorybookConfig = {
+export default defineMain({
   stories: ['../src/**/*.stories.@(js|jsx|mjs|ts|tsx)'],
   framework: {
     name: '@storybook-astro/framework',
     options: {},
   },
-};
-
-export default config;
+});
 ```
 
 **`.storybook/preview.ts`:**
 
 ```typescript
-import type { Preview } from '@storybook-astro/framework';
+import { definePreview } from '@storybook-astro/framework';
 
-const preview: Preview = {
+export default definePreview({
   parameters: {
     controls: {
       matchers: {
@@ -136,26 +134,25 @@ const preview: Preview = {
       },
     },
   },
-};
-
-export default preview;
+});
 ```
 
 **Example story (`src/components/Welcome.stories.ts`):**
 
 ```typescript
+import preview from '../../.storybook/preview';
 import Welcome from './Welcome.astro';
 
-export default {
+const meta = preview.meta({
   title: 'Components/Welcome',
   component: Welcome,
-};
+});
 
-export const Default = {
+export const Default = meta.story({
   args: {
     name: 'Storybook',
   },
-};
+});
 ```
 
 ## Gitmoji commits
