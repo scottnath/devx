@@ -1,4 +1,6 @@
-import { definePreview } from 'storybook/internal/csf';
+import { definePreview as definePreviewBase } from '@storybook-astro/renderer/index.ts';
+import type { ProjectAnnotations } from 'storybook/internal/types';
+import type { AstroRenderer } from '@storybook-astro/renderer/types';
 import {
   argTypesEnhancers,
   astroParameters,
@@ -6,18 +8,16 @@ import {
   renderToCanvas,
 } from './astro-renderer.js';
 
-type PreviewInput = NonNullable<Parameters<typeof definePreview>[0]>;
-
 const defaultControlsMatchers = {
   color: /(background|color)$/i,
   date: /Date$/i,
 };
 
 /** Storybook preview helper that wires Astro rendering without importing @storybook-astro/framework in the browser. */
-export function defineAstroPreview(input: PreviewInput = {}) {
+export function defineAstroPreview(input: ProjectAnnotations<AstroRenderer> = {}) {
   const { parameters, ...rest } = input;
 
-  return definePreview({
+  return definePreviewBase({
     render,
     renderToCanvas,
     // Renderer types are narrower than Storybook's generic enhancer signature.
@@ -33,6 +33,8 @@ export function defineAstroPreview(input: PreviewInput = {}) {
     },
   });
 }
+
+export type { AstroRenderer } from '@storybook-astro/renderer/types';
 
 export {
   argTypesEnhancers,

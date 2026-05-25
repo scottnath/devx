@@ -3,4 +3,4 @@ export {
   parameters as astroParameters,
   render,
   renderToCanvas,
-} from '@storybook-astro/renderer/entry-preview';
+} from '@storybook-astro/renderer/entry-preview.ts';
