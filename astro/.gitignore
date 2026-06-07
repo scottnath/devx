@@ -1,5 +1,7 @@
 # build output
 dist/
+storybook-static/
+storybook-server/
 # generated types
 .astro/
 

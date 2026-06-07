@@ -12,12 +12,12 @@
     "start": "npm run dev -w devx-site",
     "storybook": "npm run storybook -w devx-site",
     "typecheck": "npm run typecheck -w devx-site",
-    "build": "npm run build -w devx-site"
+    "build": "npm run build -w devx-site",
+    "build-storybook": "npm run build-storybook -w devx-site"
   },
   "exports": {
     ".": "./release-config.mjs",
     "./npm": "./release-config-npm.mjs",
-    "./storybook/astro-renderer": "./storybook/astro-renderer.ts",
     "./storybook/preview": "./storybook/preview.ts"
   },
   "files": [
@@ -34,17 +34,17 @@
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/github": "^12.0.8",
     "@semantic-release/npm": "^13.1.5",
-    "@storybook-astro/framework": "^1.2.0",
-    "@storybook-astro/renderer": "^1.2.0",
-    "@storybook/builder-vite": "^10.4.1",
-    "astro": "^6.3.7",
+    "@storybook-astro/framework": "^1.3.0",
+    "@storybook-astro/renderer": "^1.3.0",
+    "@storybook/builder-vite": "^10.4.2",
+    "astro": "^6.4.4",
     "astro-seo": "^1.1.0",
     "gitmojis": "^3.15.0",
-    "marked": "^18.0.4",
+    "marked": "^18.0.5",
     "semantic-release": "^25.0.3",
     "semantic-release-gitmoji": "^1.6.9",
-    "storybook": "^10.4.1",
-    "tsx": "^4.22.3",
+    "storybook": "^10.4.2",
+    "tsx": "^4.22.4",
     "typescript": "^6.0.3",
     "zod": "^4.4.3"
   },

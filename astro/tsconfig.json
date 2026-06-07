@@ -2,10 +2,9 @@
   "extends": "astro/tsconfigs/strict",
   "compilerOptions": {
     "paths": {
-      "@scottnath/devx/storybook/preview": ["../storybook/preview.ts"],
-      "@scottnath/devx/storybook/astro-renderer": ["../storybook/astro-renderer.ts"]
+      "@scottnath/devx/storybook/preview": ["../storybook/preview.ts"]
     }
   },
   "include": [".astro/types.d.ts", "**/*"],
-  "exclude": ["dist"]
+  "exclude": ["dist", "storybook-static", "storybook-server"]
 }

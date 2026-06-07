@@ -138,8 +138,6 @@ export default defineAstroPreview({
 });
 ```
 
-Low-level renderer exports are also available at `@scottnath/devx/storybook/astro-renderer` if you need to customize preview wiring.
-
 **Example story (`src/components/Welcome.stories.ts`):**
 
 ```typescript
