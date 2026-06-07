@@ -1,4 +1,4 @@
-import { definePreview } from 'storybook/internal/csf';
+import { definePreview, type Preview } from 'storybook/internal/csf';
 import type { ProjectAnnotations } from 'storybook/internal/types';
 import type { AstroRenderer } from '@storybook-astro/renderer/types';
 
@@ -8,10 +8,12 @@ const defaultControlsMatchers = {
 };
 
 /** Storybook preview helper for Astro projects using @storybook-astro/framework. */
-export function defineAstroPreview(input: ProjectAnnotations<AstroRenderer> = {}) {
+export function defineAstroPreview(
+  input: ProjectAnnotations<AstroRenderer> = {},
+): Preview<AstroRenderer> {
   const { parameters, ...rest } = input;
 
-  return definePreview({
+  return definePreview<AstroRenderer>({
     ...rest,
     parameters: {
       ...parameters,
