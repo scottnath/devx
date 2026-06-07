@@ -8,14 +8,17 @@ const rendererEntryPreview = join(
   '../renderer/dist/entry-preview.js',
 );
 
-/** Resolve astro-renderer entry-preview for the monorepo reference site layout. */
+/**
+ * Resolve astro-renderer entry-preview for the monorepo reference site.
+ * Installed consumers resolve ../../../@storybook-astro/... without this plugin.
+ */
 function devxAstroRendererEntryPlugin(): Plugin {
   return {
     name: 'devx-astro-renderer-entry',
     resolveId(source, importer) {
       if (
-        source === '../../@storybook-astro/renderer/dist/entry-preview.js' &&
-        importer?.includes('/storybook/astro-renderer')
+        importer?.includes('/storybook/astro-renderer') &&
+        source.includes('@storybook-astro/renderer/dist/entry-preview')
       ) {
         return rendererEntryPreview;
       }
