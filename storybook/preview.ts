@@ -1,6 +1,11 @@
 import { definePreview, type Preview } from 'storybook/internal/csf';
 import type { ProjectAnnotations } from 'storybook/internal/types';
 import type { AstroRenderer } from '@storybook-astro/renderer/types';
+import {
+  astroParameters,
+  render,
+  renderToCanvas,
+} from './astro-renderer.js';
 
 const defaultControlsMatchers = {
   color: /(background|color)$/i,
@@ -14,8 +19,11 @@ export function defineAstroPreview(
   const { parameters, ...rest } = input;
 
   return definePreview<AstroRenderer>({
+    render,
+    renderToCanvas,
     ...rest,
     parameters: {
+      ...astroParameters,
       ...parameters,
       controls: {
         matchers: defaultControlsMatchers,
@@ -26,3 +34,9 @@ export function defineAstroPreview(
 }
 
 export type { AstroRenderer } from '@storybook-astro/renderer/types';
+
+export {
+  astroParameters,
+  render,
+  renderToCanvas,
+} from './astro-renderer.js';
