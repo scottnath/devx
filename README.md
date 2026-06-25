@@ -170,6 +170,43 @@ See [docs/gitmoji-rules.md](docs/gitmoji-rules.md) and [docs/how-to-write-a-comm
 
 Regenerate docs: `npm run extract:rules`
 
+## AT Protocol (Astro + atmosphere)
+
+Requirements for connecting devx Astro sites to the atmosphere (standard.site publish, optional Bluesky ingest): [docs/atproto.md](docs/atproto.md).
+
+### Quick start (Workflow A — publish)
+
+1. Copy [docs/atproto-examples/atproto.config.example.ts](docs/atproto-examples/atproto.config.example.ts) → `atproto.config.ts`
+2. Copy [docs/atproto-examples/sync-to-atproto.example.ts](docs/atproto-examples/sync-to-atproto.example.ts) → `scripts/sync-to-atproto.ts`
+3. Add blog content under `src/content/blog/` (see [content.config.example.ts](docs/atproto-examples/content.config.example.ts))
+4. Set `public/.well-known/atproto-did` to your DID
+5. Run:
+
+```bash
+ATPROTO_APP_PASSWORD="xxxx-xxxx" ATP_IDENTIFIER="your-handle.com" npm run sync:atproto
+```
+
+**Consumer `package.json` script:**
+
+```json
+"sync:atproto": "npx tsx scripts/sync-to-atproto.ts"
+```
+
+**Verification in a post layout:**
+
+```astro
+---
+import { generateDocumentLinkTag } from '@scottnath/devx/atproto';
+const linkTag = entry.data.atprotoRkey && did
+  ? generateDocumentLinkTag(did, entry.data.atprotoRkey)
+  : null;
+---
+```
+
+**Blog comments (v1):** `BlogComments.astro` lives in the site template; it imports `fetchComments` from `@scottnath/devx/atproto`. Sync writes `bskyPostUri` to frontmatter; rebuild to refresh threads.
+
+**CI:** merge [atproto-publish.workflow.snippet.yml](docs/atproto-examples/atproto-publish.workflow.snippet.yml); secrets `ATPROTO_APP_PASSWORD`, `ATP_IDENTIFIER`.
+
 ## Node
 
 Use Node 24 (`.nvmrc` contains `24`).

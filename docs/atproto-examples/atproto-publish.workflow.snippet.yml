@@ -1,0 +1,46 @@
+# Optional: merge into `.github/workflows/publish.yml` after checkout + npm ci.
+#
+# Secrets (repo settings):
+#   ATPROTO_APP_PASSWORD — app password from bsky.app/settings/app-passwords
+#   ATP_IDENTIFIER       — handle or DID (e.g. slacktivist.com)
+#
+# Optional env for Bluesky teasers on publish:
+#   BLUESKY_CROSSPOST: '1'
+
+  atproto-sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: read
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          registry-url: https://npm.pkg.github.com
+          scope: '@scottnath'
+
+      - run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Sync blog to ATProto
+        run: npm run sync:atproto
+        env:
+          ATPROTO_APP_PASSWORD: ${{ secrets.ATPROTO_APP_PASSWORD }}
+          ATP_IDENTIFIER: ${{ secrets.ATP_IDENTIFIER }}
+          BLUESKY_CROSSPOST: ${{ vars.BLUESKY_CROSSPOST }}
+
+      - name: Commit sync state
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add atproto-state.json atproto-syndication.json public/.well-known/site.standard.publication 2>/dev/null || true
+          git diff --staged --quiet || git commit -m "🔄 Sync ATProto state [skip ci]"
+          git push
+
+  build:
+    needs: atproto-sync
+    # … existing build job …

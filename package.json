@@ -13,12 +13,15 @@
     "storybook": "npm run storybook -w devx-site",
     "typecheck": "npm run typecheck -w devx-site",
     "build": "npm run build -w devx-site",
-    "build-storybook": "npm run build-storybook -w devx-site"
+    "build-storybook": "npm run build-storybook -w devx-site",
+    "test": "node --import tsx test.config.js --coverage"
   },
   "exports": {
     ".": "./release-config.mjs",
     "./npm": "./release-config-npm.mjs",
-    "./storybook/preview": "./storybook/preview.ts"
+    "./storybook/preview": "./storybook/preview.ts",
+    "./atproto": "./atproto/index.ts",
+    "./test-runner": "./test/helpers/test-runner.js"
   },
   "files": [
     "release-config.mjs",
@@ -26,11 +29,15 @@
     "release-rules.mjs",
     "release.config.mjs",
     "storybook",
+    "atproto",
+    "!atproto/**/*.test.ts",
     "docs",
-    "scripts"
+    "scripts",
+    "test/helpers/test-runner.js"
   ],
   "dependencies": {
     "@astrojs/check": "^0.9.9",
+    "@atproto/api": "^0.15.27",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/github": "^12.0.8",
     "@semantic-release/npm": "^13.1.5",
@@ -47,8 +54,6 @@
     "tsx": "^4.22.4",
     "typescript": "^6.0.3",
     "zod": "^4.4.3"
-  },
-  "devDependencies": {
   },
   "engines": {
     "node": ">=24.0.0"
