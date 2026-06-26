@@ -94,4 +94,14 @@ describe('loadBlogPosts', () => {
     const posts = await loadBlogPosts(contentDir, '/blog', 'https://example.com');
     assert.ok(!posts.some((p) => p.slug === 'no-date'));
   });
+
+  it('loads ogImage from frontmatter', async () => {
+    writeFileSync(
+      join(contentDir, 'with-og.md'),
+      '---\ntitle: With OG\ndate: 2026-03-01\nogImage: public/images/cover.png\n---\nbody',
+    );
+    const posts = await loadBlogPosts(contentDir, '/blog', 'https://example.com');
+    const post = posts.find((p) => p.slug === 'with-og')!;
+    assert.strictEqual(post.frontmatter.ogImage, 'public/images/cover.png');
+  });
 });

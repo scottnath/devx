@@ -114,6 +114,7 @@ After sync, these fields may be written automatically:
 | `atprotoRkey` | Document record key (stable verification) |
 | `bskyPostUri` | Announcement skeet URI (for federated comments) |
 | `crosspost: false` | Opt out of Bluesky announcement for one post |
+| `ogImage` | Local path for embed thumbnail (e.g. `public/images/post.png`); falls back to `defaultOgPath` in config |
 | `draft: true` | Skipped by sync |
 
 ---
@@ -215,10 +216,11 @@ Commit bot should use `[skip ci]` on state commits. Node `>=24`.
 
 ## Images
 
-| Image type | Where it lives | Published to PDS |
-|------------|----------------|------------------|
-| Inline in blog markdown | `public/images/` on site | Markdown uses absolute URLs to your domain |
-| Bluesky embed thumb | Optional `defaultOgPath` in `atproto.config.ts` | Attached to announcement skeet embed |
+| Image type | Where it lives | Bluesky embed |
+|------------|----------------|---------------|
+| Inline in blog markdown | `public/images/` on site | — |
+| Per-post embed thumb | Frontmatter `ogImage` (e.g. `public/images/post.png`) | Uploaded on announcement |
+| Site default embed thumb | `defaultOgPath` in `atproto.config.ts` | Used when post has no `ogImage` |
 
 Prefer stable `public/images/…` paths over hashed `/_astro/…` URLs in markdown sent to the PDS.
 

@@ -1,6 +1,13 @@
 import { readFileSync, existsSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { RichText, type AtpAgent } from '@atproto/api';
 import type { CrosspostInput, CrosspostResult } from './types.js';
+
+/** Resolve a thumb path relative to `cwd`, or return `undefined` when unset. */
+export function resolveThumbPath(cwd: string, path?: string): string | undefined {
+  if (!path) return undefined;
+  return resolve(cwd, path);
+}
 
 /** Bluesky posts cap at 300 graphemes; truncate with an ellipsis if longer. */
 export function skeetText(text: string): string {

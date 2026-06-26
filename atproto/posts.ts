@@ -75,6 +75,7 @@ export async function loadBlogPosts(
           tags: Array.isArray(data.tags) ? data.tags.map(String) : undefined,
           draft: data.draft === true,
           crosspost: data.crosspost === false ? false : undefined,
+          ogImage: data.ogImage ? String(data.ogImage) : undefined,
           atprotoUri: data.atprotoUri ? String(data.atprotoUri) : undefined,
           atprotoRkey: data.atprotoRkey ? String(data.atprotoRkey) : undefined,
           bskyPostUri: data.bskyPostUri ? String(data.bskyPostUri) : undefined,

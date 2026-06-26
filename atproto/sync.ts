@@ -2,7 +2,7 @@ import 'dotenv/config';
 import { resolve } from 'node:path';
 import type { ComAtprotoRepoStrongRef } from '@atproto/api';
 import { AtprotoClient } from './client.js';
-import { createBlueskyTeaser, skeetText } from './crosspost.js';
+import { createBlueskyTeaser, resolveThumbPath, skeetText } from './crosspost.js';
 import { updatePostFrontmatter } from './frontmatter.js';
 import { loadBlogPosts, slugToRkey } from './posts.js';
 import { readState, writeState } from './state.js';
@@ -147,11 +147,14 @@ export async function syncToAtproto(
     try {
       if (needsAnnouncement && client) {
         const url = `${siteUrl}${post.postPath}/`;
+        const thumbPath =
+          resolveThumbPath(cwd, post.frontmatter.ogImage) ??
+          resolveThumbPath(cwd, config.defaultOgPath);
         const skeet = await createBlueskyTeaser(client.getAgent(), client.did, {
           text: skeetText(post.frontmatter.description || post.frontmatter.title),
           url,
           title: post.frontmatter.title,
-          thumbPath: config.defaultOgPath,
+          thumbPath,
         });
         bskyRef = { uri: skeet.uri, cid: skeet.cid };
         recordSyndication(syndication, post.postPath, {

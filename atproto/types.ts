@@ -100,6 +100,8 @@ export interface BlogPostFrontmatter {
   draft?: boolean;
   /** Set to `false` to opt out of the Bluesky announcement. */
   crosspost?: boolean;
+  /** Local path to an OG/thumbnail image for the Bluesky embed (e.g. `public/images/post.png`). */
+  ogImage?: string;
   /** AT-URI of the published `site.standard.document` (written back by sync). */
   atprotoUri?: string;
   /** Document rkey on the PDS (written back by sync). */

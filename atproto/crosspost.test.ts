@@ -3,7 +3,7 @@ import assert from 'node:assert';
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { AtpAgent } from '@atproto/api';
-import { createBlueskyTeaser, skeetText } from './crosspost.js';
+import { createBlueskyTeaser, resolveThumbPath, skeetText } from './crosspost.js';
 import { cleanup, makeTmpDir } from '../test/helpers/tmp.js';
 
 describe('skeetText', () => {
@@ -44,6 +44,24 @@ function mockAgent() {
   } as unknown as AtpAgent;
   return { agent, createRecord, uploadBlob };
 }
+
+describe('resolveThumbPath', () => {
+  let dir: string;
+
+  beforeEach(() => {
+    dir = makeTmpDir();
+  });
+
+  afterEach(() => cleanup(dir));
+
+  it('returns undefined when path is omitted', () => {
+    assert.strictEqual(resolveThumbPath(dir), undefined);
+  });
+
+  it('resolves a path relative to cwd', () => {
+    assert.strictEqual(resolveThumbPath(dir, 'public/og.png'), join(dir, 'public/og.png'));
+  });
+});
 
 describe('createBlueskyTeaser', () => {
   it('creates a feed post with an external embed and no thumb', async () => {
