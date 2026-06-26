@@ -87,6 +87,20 @@ describe('syncToAtproto', () => {
     );
   });
 
+  it('reads ATP_IDENTIFIER from .env in cwd', async (t) => {
+    const logs: string[] = [];
+    t.mock.method(console, 'log', (msg: unknown) => logs.push(String(msg)));
+    t.mock.method(console, 'warn', () => {});
+    t.mock.method(console, 'error', () => {});
+
+    writeFileSync(join(dir, '.env'), 'ATP_IDENTIFIER=from-dotenv.bsky.social\n');
+    const { config } = await import('dotenv');
+    config();
+
+    await syncToAtproto(makeConfig({ identifier: undefined }), args({ dryRun: true }));
+    assert.ok(logs.some((line) => line.includes('from-dotenv.bsky.social')));
+  });
+
   it('publishes a new post: creates doc, announces, writes state and frontmatter', async (t) => {
     silence(t);
     process.env.ATPROTO_APP_PASSWORD = 'app-password';

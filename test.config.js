@@ -6,7 +6,7 @@
 import { runNodeTests } from './test/helpers/test-runner.js';
 
 runNodeTests({
-  testDir: 'atproto',
+  testDir: ['atproto', 'cli'],
   coverageExcludeGlobs: ['**/*.test.ts', '**/test/**'],
 }).catch((err) => {
   console.error('Test runner error:', err);

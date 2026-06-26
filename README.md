@@ -172,25 +172,38 @@ Regenerate docs: `npm run extract:rules`
 
 ## AT Protocol (Astro + atmosphere)
 
-Requirements for connecting devx Astro sites to the atmosphere (standard.site publish, optional Bluesky ingest): [docs/atproto.md](docs/atproto.md).
+Implementation guide for devx Astro sites on the atmosphere: [docs/atproto.md](docs/atproto.md). Design history and tooling survey: [docs/history/atproto.md](docs/history/atproto.md).
 
-### Quick start (Workflow A — publish)
+### Quick start
 
 1. Copy [docs/atproto-examples/atproto.config.example.ts](docs/atproto-examples/atproto.config.example.ts) → `atproto.config.ts`
-2. Copy [docs/atproto-examples/sync-to-atproto.example.ts](docs/atproto-examples/sync-to-atproto.example.ts) → `scripts/sync-to-atproto.ts`
-3. Add blog content under `src/content/blog/` (see [content.config.example.ts](docs/atproto-examples/content.config.example.ts))
-4. Set `public/.well-known/atproto-did` to your DID
+2. Add blog content under `src/content/blog/` (see [content.config.example.ts](docs/atproto-examples/content.config.example.ts))
+3. Set `public/.well-known/atproto-did` to your DID
+4. Add credentials via environment variables or a `.env` file in the project root
 5. Run:
 
 ```bash
-ATPROTO_APP_PASSWORD="xxxx-xxxx" ATP_IDENTIFIER="your-handle.com" npm run sync:atproto
+# via CLI (after npm install -D @scottnath/devx)
+npx snath-devx atproto sync
+
+# dry run
+npx snath-devx atproto sync --dry-run
 ```
 
 **Consumer `package.json` script:**
 
 ```json
-"sync:atproto": "npx tsx scripts/sync-to-atproto.ts"
+"sync:atproto": "snath-devx atproto sync",
+"sync:atproto:dry-run": "snath-devx atproto sync --dry-run"
 ```
+
+**Environment variables** (also loaded from `.env` via [dotenv](https://www.npmjs.com/package/dotenv)):
+
+| Variable | Purpose |
+|----------|---------|
+| `ATPROTO_APP_PASSWORD` | App password from bsky.app/settings/app-passwords |
+| `ATP_IDENTIFIER` | Handle or DID (e.g. `slacktivist.com`) |
+| `BLUESKY_CROSSPOST` | Set to `0` to disable Bluesky announcement skeets |
 
 **Verification in a post layout:**
 

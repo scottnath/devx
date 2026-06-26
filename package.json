@@ -14,7 +14,12 @@
     "typecheck": "npm run typecheck -w devx-site",
     "build": "npm run build -w devx-site",
     "build-storybook": "npm run build-storybook -w devx-site",
-    "test": "node --import tsx test.config.js --coverage"
+    "test": "node --import tsx test.config.js --coverage",
+    "sync:atproto": "node --import tsx cli/index.ts atproto sync",
+    "sync:atproto:dry-run": "node --import tsx cli/index.ts atproto sync --dry-run"
+  },
+  "bin": {
+    "snath-devx": "./cli/index.ts"
   },
   "exports": {
     ".": "./release-config.mjs",
@@ -29,6 +34,8 @@
     "release-rules.mjs",
     "release.config.mjs",
     "storybook",
+    "cli",
+    "!cli/**/*.test.ts",
     "atproto",
     "!atproto/**/*.test.ts",
     "docs",
@@ -36,6 +43,8 @@
     "test/helpers/test-runner.js"
   ],
   "dependencies": {
+    "commander": "^13.1.0",
+    "dotenv": "^17.2.3",
     "@astrojs/check": "^0.9.9",
     "@atproto/api": "^0.15.27",
     "@semantic-release/changelog": "^6.0.3",

@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { resolve } from 'node:path';
 import type { ComAtprotoRepoStrongRef } from '@atproto/api';
 import { AtprotoClient } from './client.js';

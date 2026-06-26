@@ -1,12 +1,14 @@
-# Astro sites and AT Protocol
+# AT Protocol for devx Astro sites
 
-Requirements and architecture for connecting **Astro-managed static sites** (GitHub Pages, devx-template shape) to the [ATmosphere](https://atproto.com/) — with [standard.site](https://standard.site/) for long-form publishing and Bluesky (`app.bsky.feed.*`) for social records.
+Connect an **Astro 6** static site (GitHub Pages, [devx-template](https://github.com/scottnath/devx-template) shape) to the [ATmosphere](https://atproto.com/): publish long-form posts as [standard.site](https://standard.site/) documents, optionally announce them on Bluesky, and show federated comment threads on your blog pages.
 
-This doc is the source of truth for a future devx preset (scripts, content schemas, CI snippets). It describes what to build, which npm packages to compose, and how the two workflows fit together.
+Implementation lives in `@scottnath/devx` — CLI plus a small library on `@atproto/api`. Site-specific layout and content schema live in the template repo.
+
+For research, tooling comparisons, and why we built it this way, see [history/atproto.md](history/atproto.md).
 
 ---
 
-## Concepts (60 seconds)
+## Glossary
 
 | Term | Meaning |
 |------|---------|
@@ -20,181 +22,105 @@ Publishing to the atmosphere means writing **records on your PDS**. The website 
 
 ---
 
-## Two workflows
-
-Most devx sites need **Workflow A**. **Workflow B** is optional: surface Bluesky activity on the site without writing everything as markdown first.
+## Overview
 
 ```mermaid
-flowchart TB
-  subgraph site["Astro site (GitHub Pages)"]
-    blog["blog collection\nlocal markdown"]
-    notes["notes / replies collections\nfrom PDS at build"]
-  end
+flowchart LR
+  blog["Blog markdown\nin repo"]
+  sync["snath-devx\natproto sync"]
+  pds["PDS records\nsite.standard.document"]
+  bsky["Bluesky skeet\n(announcement)"]
+  site["Static site\nastro build"]
+  comments["BlogComments\nat build time"]
 
-  subgraph pds["Your PDS"]
-    doc["site.standard.document"]
-    post["app.bsky.feed.post"]
-  end
-
-  blog -->|"Workflow A: publish script"| doc
-  post -->|"Workflow B: content loader"| notes
-  doc -.->|"optional cross-post teaser"| post
+  blog --> sync --> pds
+  sync --> bsky
+  sync --> blog
+  blog --> site
+  bsky --> comments
+  site --> comments
 ```
 
-### Workflow A — Publish out
+**Source of truth for articles:** markdown in `src/content/blog/`.
 
-**Source of truth:** markdown in the repo.
-
-1. Write posts in Astro (`src/content/blog/` or equivalent).
-2. CI (or local) runs a **sync script** → creates/updates `site.standard.document` on your PDS.
-3. `astro build` → static site with verification tags and optional federated comments.
-
-Long-form lives on the PDS as standard.site records; images in posts stay on your site as stable URLs (`public/images/…`).
-
-### Workflow B — Ingest in (atmosphere → site)
-
-**Source of truth:** records already on your PDS (Bluesky for now).
-
-1. You post or reply on Bluesky → `app.bsky.feed.post` in **your** repo.
-2. At **build time**, a content loader pulls selected records into Astro collections.
-3. Static pages render notes, replies, threads, etc.
-
-This is **not** Leaflet ingest. You are not importing essays from another writing app. You are displaying **your social graph activity** (skeets, replies, quotes) on your own site.
-
-Workflow B does **not** replace Workflow A for long articles. Use both with clear dedupe rules (see [Avoiding duplicates](#avoiding-duplicates-between-workflows)).
+1. Write posts locally (skip `draft: true` when ready to publish).
+2. Run **`snath-devx atproto sync`** (locally or in CI) — creates/updates PDS documents, optionally posts a Bluesky announcement, writes sync state and frontmatter.
+3. **`astro build`** — static site with verification tags and federated comments on posts that have a `bskyPostUri`.
 
 ---
 
-## Ecosystem: Astro integrations
+## What devx ships
 
-Listed on [Astro integrations — search: atproto](https://astro.build/integrations/?search=atproto).
+| Artifact | Purpose |
+|----------|---------|
+| `snath-devx atproto sync` | CLI — publish, dry-run, force, single-post, delete |
+| `@scottnath/devx/atproto` | `fetchComments`, `countComments`, `generateDocumentLinkTag`, types |
+| `devx-template` | `BlogPost.astro`, `BlogComments.astro`, blog content schema, CI hooks |
 
-| Package | Job | Direction | Astro 6 | Use for |
-|---------|-----|-----------|---------|---------|
-| [@bryanguffey/astro-standard-site](https://www.npmjs.com/package/@bryanguffey/astro-standard-site) | Publish, comments, verify | Write (+ basic read) | Partial — loader broken on v6 in npm 1.0.3 | **Workflow A** |
-| [at-astro-loader](https://github.com/chrisvander/at-astro-loader) | Typed lexicon loader + renderers | Read | Yes (`^6.1.8`) | Workflow B (any lexicon); Leaflet/Pckt render |
-| [@fujocoded/astro-atproto-loader](https://www.npmjs.com/package/@fujocoded/astro-atproto-loader) | Flexible record loader | Read | Yes (`^5.13 \|\| ^6`) | **Workflow B** (Bluesky posts, `fetchRecord`, blobs) |
-| [@dylmye/atproto-standard-site-astro-loader](https://www.npmjs.com/package/@dylmye/atproto-standard-site-astro-loader) | standard.site ingest only | Read | Yes (`>=6`) | Early; not needed if B is Bluesky-first |
-| [@fujocoded/authproto](https://www.npmjs.com/package/@fujocoded/authproto) | Visitor OAuth login | Auth | Yes | Guestbooks, SSR apps — **not** static blog ingest |
+**Dependency:** `@atproto/api` only (via devx). No third-party Astro ATProto packages.
 
-**Sequoia** ([sequoia.pub](https://sequoia.pub/)) is a CLI alternative for Workflow A (framework-agnostic). devx may document it as an option; the preset will compose **astro-standard-site** for Astro-native publish + comments.
-
-### Capability gaps (nothing ships all of this)
-
-| Capability | Sequoia | astro-standard-site | devx preset (planned) |
-|------------|---------|---------------------|------------------------|
-| Publish posts → PDS | CLI | Library + example script | Opinionated sync script |
-| State / change tracking | `.sequoia-state.json` | Frontmatter / script | `atproto-state.json` |
-| Dry-run | Yes | In repo script only | Yes |
-| Bluesky auto-announce | Config flag | No | Optional env flag |
-| Federated comments on blog | Web component | `Comments.astro` | Layout snippet |
-| Ingest Bluesky posts/replies | N/A | Wrong loader | fujocoded / at-astro-loader |
-| Static GitHub Pages | Yes | Yes | Yes |
-
-Reference implementations:
-
-- Publish + CI + state + optional crosspost: [benswift/benswift.github.io](https://github.com/benswift/benswift.github.io) (`scripts/atproto-publish.ts`, not astro-standard-site)
-- Sync script with dry-run: [musicjunkieg/astro-standard-site/scripts/sync-to-atproto.ts](https://github.com/musicjunkieg/astro-standard-site/blob/main/scripts/sync-to-atproto.ts)
-- Jekyll publish + CI + `.well-known` on Pages: [andrew/jekyll-standard-site](https://github.com/andrew/jekyll-standard-site)
+**State files:** `atproto-state.json`, `atproto-syndication.json` (gitignored locally; CI may commit them). Sync writes `atprotoUri`, `atprotoRkey`, and `bskyPostUri` to post frontmatter.
 
 ---
 
-## Requirements by layer
+## Setup checklist
 
-### Layer 0 — Identity
+1. [ ] `public/.well-known/atproto-did` — plain DID line for domain identity
+2. [ ] `atproto.config.ts` — copy from [atproto.config.example.ts](atproto-examples/atproto.config.example.ts)
+3. [ ] Blog collection — see [content.config.example.ts](atproto-examples/content.config.example.ts)
+4. [ ] `BlogPost.astro` + `BlogComments.astro` — copy from devx-template
+5. [ ] Credentials — `ATPROTO_APP_PASSWORD`, `ATP_IDENTIFIER` (env or `.env`)
+6. [ ] GitHub Actions secrets for CI sync — see [atproto-publish.workflow.snippet.yml](atproto-examples/atproto-publish.workflow.snippet.yml)
+7. [ ] GitHub Pages: `include-hidden-files: 'true'` on `upload-pages-artifact` so `.well-known` deploys
+8. [ ] Verify: [pdsls.dev](https://pdsls.dev/) for records; resolve handle via public API
 
-| Requirement | Implementation |
-|-------------|----------------|
-| ATProto account | Bluesky (or any PDS) + [app password](https://bsky.app/settings/app-passwords) for CI |
-| Domain handle | DNS + `public/.well-known/atproto-did` (plain DID) |
-
-Check: `curl https://public.api.bsky.app/xrpc/com.atproto.identity.resolveHandle?handle=YOUR_HANDLE`
-
-### Layer 1 — Publication
-
-| Requirement | Implementation |
-|-------------|----------------|
-| `site.standard.publication` on PDS | One-time via `StandardSitePublisher.publishPublication()` or Sequoia `init` |
-| `/.well-known/site.standard.publication` | Static file: single line, publication AT-URI |
-| Optional discovery hint | `<link rel="site.standard.publication" href="at://…">` in site layout |
-
-### Layer 2 — Document publishing (Workflow A)
-
-| Requirement | Implementation |
-|-------------|----------------|
-| Content source | Astro 6: `src/content.config.ts` + `glob()` loader for `src/content/blog/**` |
-| Transform | `transformContent()` → `site.standard.content.markdown` + `textContent` |
-| Stable image URLs | Prefer `public/images/…` over hashed `/_astro/…` paths in published markdown |
-| Publish script | Create/update `site.standard.document`; run **before** or **after** build (benswift: before build, commit state) |
-| Idempotency | State file and/or frontmatter `atprotoUri` / `atprotoRkey` |
-| Change detection | Content hashes (recommended) or path-only matching |
-| Drafts | Skip `draft: true` in frontmatter |
-
-**Not automatic:** Bluesky feed posts. The sync script writes PDS documents only unless you add crosspost logic.
-
-### Layer 3 — Document verification
-
-| Requirement | Implementation |
-|-------------|----------------|
-| Per-post `<link rel="site.standard.document" href="at://…">` | Post layout `<head>` from frontmatter or generated content |
-| Helpers | `generateDocumentLinkTag()` from astro-standard-site |
-
-### Layer 4 — Bluesky announcement (required for comments)
-
-Every published post gets a Bluesky **announcement skeet** (title + description + link). Replies on that skeet are the comment thread shown on the blog page.
-
-| Requirement | Implementation |
-|-------------|----------------|
-| Teaser post | Title + description + URL (~300 chars), not full article |
-| `bskyPostRef` on document | Links PDS document to the announcement skeet |
-| Default | On for all non-draft posts; opt out with frontmatter `crosspost: false` |
-| Disable all | Env `BLUESKY_CROSSPOST=0` |
-| Thumbnail | Optional `defaultOgPath` in `atproto.config.ts` |
-
-Sync writes `bskyPostUri` back to post frontmatter so `BlogComments` can fetch replies at build time.
-
-### Layer 5 — Federated comments on blog posts (v1)
-
-| Requirement | Implementation |
-|-------------|----------------|
-| Bluesky announcement per article | Layer 4 (sync script, default on) |
-| `bskyPostUri` in frontmatter | Written by sync after announcement |
-| UI | `src/components/BlogComments.astro` in site template (imports `fetchComments` from devx) |
-| Refresh | Rebuild site when new replies appear (CI publish → build) |
-
-Distinct from Workflow B: comments show **replies on your article’s skeet**, not a site section of all your reply-posts.
-
-### Layer 6 — Atmosphere ingest (Workflow B)
-
-| Requirement | Implementation |
-|-------------|----------------|
-| Loader | `@fujocoded/astro-atproto-loader` or `at-astro-loader` |
-| Collection | `app.bsky.feed.post` from your handle/DID |
-| Split collections | See [Suggested collections](#suggested-content-collections) |
-| Reply context | `fetchRecord({ atUri: reply.parent.uri })` to hydrate parent |
-| Media | `toHostedBlob()` (fujocoded) for avatar/embed images |
-| Filter | Exclude cross-post teasers that duplicate Workflow A |
-| Refresh | Rebuild to pick up new skeets/replies |
-
-**Out of scope for v1:** ingesting other people’s top-level posts as site content (curation product); SSR live collections; Leaflet long-form ingest.
-
-### Layer 7 — Operations (CI/CD)
-
-| Requirement | Implementation |
-|-------------|----------------|
-| Secrets | `ATPROTO_APP_PASSWORD`, `ATP_IDENTIFIER` (or handle) in GitHub Actions |
-| Order | Publish → commit state → build → deploy (or publish after build if URLs must exist first — document choice) |
-| State commit-back | `[skip ci]` + bot guard; commit `atproto-state.json` or frontmatter patches |
-| GitHub Pages `.well-known` | `include-hidden-files: 'true'` on `actions/upload-pages-artifact` |
-| Node | `>=24` (devx standard) |
+Check handle: `curl 'https://public.api.bsky.app/xrpc/com.atproto.identity.resolveHandle?handle=YOUR_HANDLE'`
 
 ---
 
-## Suggested content collections
+## Configuration
 
-Astro 6: define in `src/content.config.ts`.
+### `atproto.config.ts`
 
-### Workflow A — `blog`
+Copy [atproto.config.example.ts](atproto-examples/atproto.config.example.ts). Key fields:
+
+| Field | Purpose |
+|-------|---------|
+| `siteUrl` | Canonical site URL (used in published markdown links) |
+| `identifier` | Handle or DID; falls back to `ATP_IDENTIFIER` env |
+| `contentDir` | Blog markdown directory |
+| `postPathPrefix` | URL prefix, e.g. `/blog` |
+| `publication` | Name and description for `site.standard.publication` |
+
+On first sync, devx ensures the publication record exists and writes `public/.well-known/site.standard.publication`.
+
+### Environment variables
+
+Loaded from the process environment and from `.env` in the project root ([dotenv](https://www.npmjs.com/package/dotenv)).
+
+| Variable | Purpose |
+|----------|---------|
+| `ATPROTO_APP_PASSWORD` | [App password](https://bsky.app/settings/app-passwords) for sync |
+| `ATP_IDENTIFIER` | Handle or DID (e.g. `slacktivist.com`) |
+| `BLUESKY_CROSSPOST` | Set to `0` to disable Bluesky announcement skeets |
+
+### Blog frontmatter
+
+After sync, these fields may be written automatically:
+
+| Field | Purpose |
+|-------|---------|
+| `atprotoUri` | AT-URI of the `site.standard.document` |
+| `atprotoRkey` | Document record key (stable verification) |
+| `bskyPostUri` | Announcement skeet URI (for federated comments) |
+| `crosspost: false` | Opt out of Bluesky announcement for one post |
+| `draft: true` | Skipped by sync |
+
+---
+
+## Site integration
+
+### Content collection
 
 ```ts
 import { defineCollection } from 'astro:content';
@@ -209,108 +135,92 @@ const blog = defineCollection({
     date: z.coerce.date(),
     draft: z.boolean().optional(),
     tags: z.array(z.string()).optional(),
-    // After first publish (Workflow A)
     atprotoUri: z.string().optional(),
     atprotoRkey: z.string().optional(),
-    // For federated comments (Layer 5)
     bskyPostUri: z.string().optional(),
-    // For optional crosspost (Layer 4)
     crosspost: z.boolean().optional(),
   }),
 });
 ```
 
-### Workflow B — `notes` and `replies`
+### Post layout — document verification
 
-Load from your repo, filter in `transform`:
-
-| Collection | Filter | Purpose |
-|------------|--------|---------|
-| `notes` | `app.bsky.feed.post`, no `reply` | Top-level skeets not mirrored as blog posts |
-| `replies` | `app.bsky.feed.post`, has `reply` | Your replies on the network |
-
-Example shape (fujocoded loader — adjust to package API):
-
-```ts
-import { defineAtProtoCollection } from '@fujocoded/astro-atproto-loader';
-import { z } from 'astro/zod';
-
-const notes = defineAtProtoCollection({
-  source: {
-    repo: 'slacktivist.com', // handle or DID
-    collection: 'app.bsky.feed.post',
-    limit: 100, // or 'all' with care
-  },
-  transform: ({ value, uri, rkey }) => {
-    const v = value as { text?: string; reply?: unknown };
-    if (v.reply) return undefined; // skip replies → replies collection
-    return { id: rkey, data: { uri, text: v.text ?? '' } };
-  },
-  outputSchema: z.object({
-    uri: z.string(),
-    text: z.string(),
-  }),
-});
+```astro
+---
+import { generateDocumentLinkTag } from '@scottnath/devx/atproto';
+const linkTag = entry.data.atprotoRkey && did
+  ? generateDocumentLinkTag(did, entry.data.atprotoRkey)
+  : null;
+---
+<Fragment slot="head">
+  {linkTag && <Fragment set:html={linkTag} />}
+</Fragment>
 ```
 
-Replies collection: same source, inverted filter; use `fetchRecord` in `transform` to attach parent text/author when needed.
+Base layout needs `<slot name="head" />` in `<head>`.
+
+### Federated comments
+
+`BlogComments.astro` in the site template imports `fetchComments` from `@scottnath/devx/atproto`. Requires `bskyPostUri` in frontmatter (written by sync). Rebuild the site to refresh threads after new replies.
+
+Each published post gets a Bluesky **announcement skeet** (title + description + link). Replies on that skeet are the comment thread.
 
 ---
 
-## Avoiding duplicates between workflows
+## CLI
 
-| Content | Workflow | Rule |
-|---------|----------|------|
-| Long article written in Astro | A only | Publish `site.standard.document`; do not show cross-post skeet in `notes` |
-| Skeet-only thought | B only | No local markdown; appears in `notes` |
-| Reply on someone else's post | B only | `replies` collection; hydrate parent |
-| Article + optional Bluesky teaser | A + Layer 4 | Document on PDS + skeet with link; comments via `bskyPostUri` |
+```bash
+# Publish (or update) all non-draft posts
+npx snath-devx atproto sync
 
-Dedupe tactics:
+# Preview without writing
+npx snath-devx atproto sync --dry-run
 
-- Track syndicated skeet URIs in `atproto-state.json` or `atproto-syndication.json`
-- Filter `notes` where `text` matches canonical blog URL pattern
-- Exclude records that already have a matching `site.standard.document` path
+# Re-publish everything
+npx snath-devx atproto sync --force
+
+# Single post
+npx snath-devx atproto sync --post my-slug
+
+# Custom config path
+npx snath-devx atproto sync -c atproto.config.ts
+```
+
+**Consumer `package.json`:**
+
+```json
+"sync:atproto": "snath-devx atproto sync",
+"sync:atproto:dry-run": "snath-devx atproto sync --dry-run"
+```
+
+In the devx repo itself (cannot invoke its own bin symlink during development):
+
+```json
+"sync:atproto": "node --import tsx cli/index.ts atproto sync"
+```
+
+---
+
+## CI/CD
+
+Merge [atproto-publish.workflow.snippet.yml](atproto-examples/atproto-publish.workflow.snippet.yml) into your Publish workflow.
+
+Typical order: **sync → commit state/frontmatter → build → deploy**.
+
+Secrets: `ATPROTO_APP_PASSWORD`, `ATP_IDENTIFIER`. Optional variable: `BLUESKY_CROSSPOST`.
+
+Commit bot should use `[skip ci]` on state commits. Node `>=24`.
 
 ---
 
 ## Images
 
-| Image type | Where it lives | Atmosphere |
-|------------|----------------|------------|
-| Inline in blog markdown | `public/images/` on site | Published markdown uses absolute URLs to your domain |
-| Cover / OG | Frontmatter + `public/` or assets | Optional blob on PDS (`coverImage`) via custom script; Sequoia does this |
-| Bluesky embed thumb | Local hero/OG file | Uploaded or linked in crosspost embed only |
-| Avatars/media in ingested skeets | PDS blobs | `toHostedBlob()` at build time (Workflow B) |
+| Image type | Where it lives | Published to PDS |
+|------------|----------------|------------------|
+| Inline in blog markdown | `public/images/` on site | Markdown uses absolute URLs to your domain |
+| Bluesky embed thumb | Optional `defaultOgPath` in `atproto.config.ts` | Attached to announcement skeet embed |
 
----
-
-## devx distribution
-
-Owned code on `@atproto/api` only — no third-party Astro ATProto packages.
-
-| Artifact | Purpose |
-|----------|---------|
-| `@scottnath/devx/atproto` | **Single export:** `runSyncCli`, `fetchComments`, `countComments`, `generateDocumentLinkTag`, `AtprotoSyncConfig` |
-| `scripts/sync-to-atproto.ts` | Runnable CLI in devx (or `npm run sync:atproto` in site) |
-| `devx-template` | Blog layout, `BlogComments.astro`, content schema — copy source for new sites |
-
-Dependency: `@atproto/api` only (transitive via devx).
-
-State files: `atproto-state.json`, `atproto-syndication.json`. Sync writes `bskyPostUri` / `atprotoRkey` to post frontmatter.
-
----
-
-## Setup checklist (consumer site)
-
-1. [ ] `public/.well-known/atproto-did` — domain identity
-2. [ ] App password in GitHub Actions secrets
-3. [ ] One-time: create `site.standard.publication`; save AT-URI
-4. [ ] `public/.well-known/site.standard.publication` — publication AT-URI
-5. [ ] Blog collection + `BlogPost.astro` with `BlogComments`
-6. [ ] Run `sync:atproto` — publishes document + announcement skeet + writes `bskyPostUri`
-7. [ ] Optional: `notes` / `replies` loaders (Workflow B)
-9. [ ] Verify: [pdsls.dev](https://pdsls.dev/) for records; curl `.well-known` endpoints
+Prefer stable `public/images/…` paths over hashed `/_astro/…` URLs in markdown sent to the PDS.
 
 ---
 
@@ -318,6 +228,5 @@ State files: `atproto-state.json`, `atproto-syndication.json`. Sync writes `bsky
 
 - [standard.site](https://standard.site/)
 - [ATProto docs](https://atproto.com/)
-- [Upgrade to Astro v6](https://docs.astro.build/en/guides/upgrade-to/v6/) — Content Layer API required
-- [Astro integrations: atproto](https://astro.build/integrations/?search=atproto)
-- [Sequoia publishing](https://sequoia.pub/publishing)
+- [Astro v6 upgrade guide](https://docs.astro.build/en/guides/upgrade-to/v6/)
+- [Design history & tooling survey](history/atproto.md)

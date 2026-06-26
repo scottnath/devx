@@ -2,16 +2,12 @@ import { afterEach, beforeEach, describe, it } from 'node:test';
 import assert from 'node:assert';
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import {
-  configPathFromArgs,
-  loadConfig,
-  parseSyncArgs,
-} from './cli.js';
+import { loadConfig, syncArgsFromOptions } from './atproto.js';
 import { cleanup, makeTmpDir } from '../test/helpers/tmp.js';
 
-describe('parseSyncArgs', () => {
+describe('syncArgsFromOptions', () => {
   it('defaults all flags to false/undefined', () => {
-    assert.deepStrictEqual(parseSyncArgs([]), {
+    assert.deepStrictEqual(syncArgsFromOptions({}), {
       dryRun: false,
       force: false,
       postSlug: undefined,
@@ -19,23 +15,21 @@ describe('parseSyncArgs', () => {
     });
   });
 
-  it('parses flags and the --post= value', () => {
-    assert.deepStrictEqual(parseSyncArgs(['--dry-run', '--force', '--delete', '--post=my-slug']), {
-      dryRun: true,
-      force: true,
-      postSlug: 'my-slug',
-      delete: true,
-    });
-  });
-});
-
-describe('configPathFromArgs', () => {
-  it('defaults to atproto.config.ts', () => {
-    assert.strictEqual(configPathFromArgs([]), 'atproto.config.ts');
-  });
-
-  it('reads --config=', () => {
-    assert.strictEqual(configPathFromArgs(['--config=custom.config.ts']), 'custom.config.ts');
+  it('maps commander-style options', () => {
+    assert.deepStrictEqual(
+      syncArgsFromOptions({
+        dryRun: true,
+        force: true,
+        delete: true,
+        post: 'my-slug',
+      }),
+      {
+        dryRun: true,
+        force: true,
+        postSlug: 'my-slug',
+        delete: true,
+      },
+    );
   });
 });
 
