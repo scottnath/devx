@@ -59,18 +59,6 @@ async function fetchBlueskyReplies(postUri: string, maxDepth: number): Promise<C
   }
 }
 
-/** Search Bluesky for posts mentioning a URL, as flat comments. */
-async function searchBlueskyMentions(url: string, maxResults: number): Promise<Comment[]> {
-  const agent = new AtpAgent({ service: PUBLIC_API });
-  try {
-    const res = await agent.app.bsky.feed.searchPosts({ q: url, limit: maxResults });
-    return (res.data.posts ?? []).map(bskyPostToComment);
-  } catch (error) {
-    console.error('Failed to search Bluesky mentions:', error);
-    return [];
-  }
-}
-
 /**
  * Build a nested, chronologically-sorted comment tree from a flat list,
  * linking each comment to its parent by AT-URI.
@@ -96,27 +84,16 @@ export function buildCommentTree(comments: Comment[]): Comment[] {
 }
 
 /**
- * Fetch federated comments for a blog post: replies to its announcement skeet
- * plus any posts mentioning its canonical URL, returned as a comment tree.
+ * Fetch federated comments for a blog post: replies to its announcement skeet,
+ * returned as a nested comment tree.
+ *
+ * URL mention search (`app.bsky.feed.searchPosts`) is not called here — that
+ * endpoint returns 403 on `public.api.bsky.app` without authenticated App View.
  */
 export async function fetchComments(options: FetchCommentsOptions): Promise<Comment[]> {
-  const { bskyPostUri, canonicalUrl, maxDepth = 3, maxComments = 100 } = options;
+  const { bskyPostUri, maxDepth = 3, maxComments = 100 } = options;
   const all: Comment[] = [];
   if (bskyPostUri) all.push(...(await fetchBlueskyReplies(bskyPostUri, maxDepth)));
-  if (canonicalUrl) {
-    const mentions = await searchBlueskyMentions(
-      canonicalUrl,
-      Math.max(10, maxComments - all.length),
-    );
-    const seen = new Set(all.map((c) => c.uri));
-    if (bskyPostUri) seen.add(bskyPostUri);
-    for (const m of mentions) {
-      if (!seen.has(m.uri)) {
-        all.push(m);
-        seen.add(m.uri);
-      }
-    }
-  }
   return buildCommentTree(all.slice(0, maxComments));
 }
 

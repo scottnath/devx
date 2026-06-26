@@ -13,7 +13,7 @@ const blog = defineCollection({
     description: z.string().optional(),
     date: z.coerce.date(),
     draft: z.boolean().optional(),
-    tags: z.array(z.string()).optional(),
+    tags: z.array(z.string()).nullish(),
     atprotoUri: z.string().optional(),
     atprotoRkey: z.string().optional(),
     bskyPostUri: z.string().optional(),

@@ -132,9 +132,9 @@ describe('fetchComments', () => {
     assert.deepStrictEqual(comments, []);
   });
 
-  it('adds canonical-url search mentions, de-duplicating the announcement', async (t) => {
+  it('does not call searchPosts for canonicalUrl (public API returns 403)', async (t) => {
     const rootUri = 'at://did:plc:author/app.bsky.feed.post/root';
-    installAtpMock(t, {
+    const mock = installAtpMock(t, {
       thread: makeThread({
         post: { uri: rootUri, text: 'root' },
         replies: [
@@ -149,7 +149,6 @@ describe('fetchComments', () => {
         ],
       }),
       searchPosts: [
-        makePostView({ uri: rootUri, text: 'should be deduped' }),
         makePostView({
           uri: 'at://did:plc:other/app.bsky.feed.post/mention',
           text: 'a mention',
@@ -162,7 +161,7 @@ describe('fetchComments', () => {
       bskyPostUri: rootUri,
       canonicalUrl: 'https://example.com/blog/post/',
     });
-    const texts = comments.map((c) => c.text).sort();
-    assert.deepStrictEqual(texts, ['a mention', 'a reply']);
+    assert.deepStrictEqual(comments.map((c) => c.text), ['a reply']);
+    assert.strictEqual(mock.callsTo('/xrpc/app.bsky.feed.searchPosts').length, 0);
   });
 });

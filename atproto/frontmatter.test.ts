@@ -38,6 +38,12 @@ describe('parseFrontmatter', () => {
     const { data } = parseFrontmatter(raw);
     assert.deepStrictEqual(data, { title: 'ok' });
   });
+
+  it('ignores empty scalar values such as tags:', () => {
+    const raw = '---\ntitle: ok\ntags:\n---\nbody';
+    const { data } = parseFrontmatter(raw);
+    assert.deepStrictEqual(data, { title: 'ok' });
+  });
 });
 
 describe('stringifyFrontmatter', () => {

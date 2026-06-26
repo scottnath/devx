@@ -7,6 +7,13 @@ import type { BlogPost } from './types.js';
 
 export type { BlogPost } from './types.js';
 
+/** Normalize optional tag lists — omit empty, null, or non-array values. */
+export function normalizeTags(value: unknown): string[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  const tags = value.map((item) => String(item).trim()).filter(Boolean);
+  return tags.length > 0 ? tags : undefined;
+}
+
 /** Convert a slug to a record key, replacing unsafe chars and capping length. */
 export function slugToRkey(slug: string): string {
   return slug.replace(/[^a-zA-Z0-9_-]/g, '-').slice(0, 128);
@@ -72,7 +79,7 @@ export async function loadBlogPosts(
           title: String(data.title ?? slug),
           description: data.description ? String(data.description) : undefined,
           date,
-          tags: Array.isArray(data.tags) ? data.tags.map(String) : undefined,
+          tags: normalizeTags(data.tags),
           draft: data.draft === true,
           crosspost: data.crosspost === false ? false : undefined,
           ogImage: data.ogImage ? String(data.ogImage) : undefined,

@@ -153,7 +153,14 @@ function documentRecord(
     bskyPostRef: input.bskyPostRef,
     ...extra,
   };
-  return Object.fromEntries(Object.entries(record).filter(([, v]) => v !== undefined));
+  return Object.fromEntries(Object.entries(record).filter(([, v]) => isPresent(v)));
+}
+
+/** Keep fields that should be written to the PDS record. */
+function isPresent(value: unknown): boolean {
+  if (value === undefined || value === null || value === '') return false;
+  if (Array.isArray(value) && value.length === 0) return false;
+  return true;
 }
 
 /** Resolve a handle to its DID via the public API. */

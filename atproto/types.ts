@@ -250,7 +250,7 @@ export interface Comment {
 export interface FetchCommentsOptions {
   /** AT-URI of the announcement skeet whose replies become comments. */
   bskyPostUri?: string;
-  /** Canonical article URL; matching posts are pulled in as mentions. */
+  /** Canonical article URL (reserved; mention search is not available on the public API). */
   canonicalUrl?: string;
   /** Maximum reply depth to traverse. Default `3`. */
   maxDepth?: number;

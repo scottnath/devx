@@ -25,6 +25,7 @@ export function parseFrontmatter(raw: string): { data: Record<string, unknown>; 
         .filter(Boolean);
     } else if (typeof val === 'string') {
       val = val.replace(/^["']|["']$/g, '');
+      if (val === '') continue;
     }
     data[key] = val;
   }

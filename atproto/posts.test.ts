@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import {
   computeHash,
   loadBlogPosts,
+  normalizeTags,
   slugToRkey,
   type BlogPost,
 } from './posts.js';
@@ -33,6 +34,19 @@ describe('computeHash', () => {
 
   it('differs for different input', () => {
     assert.notStrictEqual(computeHash('a'), computeHash('b'));
+  });
+});
+
+describe('normalizeTags', () => {
+  it('returns undefined for missing, null, or empty values', () => {
+    assert.strictEqual(normalizeTags(undefined), undefined);
+    assert.strictEqual(normalizeTags(null), undefined);
+    assert.strictEqual(normalizeTags([]), undefined);
+    assert.strictEqual(normalizeTags(['', '  ']), undefined);
+  });
+
+  it('returns trimmed string tags', () => {
+    assert.deepStrictEqual(normalizeTags(['a', 'b']), ['a', 'b']);
   });
 });
 
