@@ -70,6 +70,7 @@ describe('createBlueskyTeaser', () => {
       text: 'Read my new post',
       url: 'https://example.com/blog/post/',
       title: 'My Post',
+      description: 'A short summary',
     });
 
     assert.deepStrictEqual(res, { uri: 'at://did:plc:me/app.bsky.feed.post/xyz', cid: 'bafycid' });
@@ -82,6 +83,7 @@ describe('createBlueskyTeaser', () => {
     assert.deepStrictEqual(embed.external, {
       uri: 'https://example.com/blog/post/',
       title: 'My Post',
+      description: 'A short summary',
     });
   });
 
@@ -103,6 +105,7 @@ describe('createBlueskyTeaser', () => {
         text: 'Read my new post',
         url: 'https://example.com/blog/post/',
         title: 'My Post',
+        description: 'A short summary',
         thumbPath: thumb,
       });
 
@@ -118,6 +121,7 @@ describe('createBlueskyTeaser', () => {
         text: 'Read my new post',
         url: 'https://example.com/blog/post/',
         title: 'My Post',
+        description: 'A short summary',
         thumbPath: join(dir, 'missing.png'),
       });
       assert.strictEqual(uploadBlob.mock.callCount(), 0);

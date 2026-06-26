@@ -211,6 +211,8 @@ export interface CrosspostInput {
   url: string;
   /** Article title, used for the external embed card. */
   title: string;
+  /** Short summary for the external embed card (required by Bluesky). */
+  description: string;
   /** Optional path to a local thumbnail image for the embed. */
   thumbPath?: string;
 }

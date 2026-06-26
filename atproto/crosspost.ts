@@ -27,6 +27,7 @@ export async function createBlueskyTeaser(
   const external: Record<string, unknown> = {
     uri: input.url,
     title: input.title,
+    description: input.description,
   };
 
   if (input.thumbPath && existsSync(input.thumbPath)) {

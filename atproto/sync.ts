@@ -150,10 +150,12 @@ export async function syncToAtproto(
         const thumbPath =
           resolveThumbPath(cwd, post.frontmatter.ogImage) ??
           resolveThumbPath(cwd, config.defaultOgPath);
+        const summary = post.frontmatter.description || post.frontmatter.title;
         const skeet = await createBlueskyTeaser(client.getAgent(), client.did, {
-          text: skeetText(post.frontmatter.description || post.frontmatter.title),
+          text: skeetText(summary),
           url,
           title: post.frontmatter.title,
+          description: summary,
           thumbPath,
         });
         bskyRef = { uri: skeet.uri, cid: skeet.cid };
