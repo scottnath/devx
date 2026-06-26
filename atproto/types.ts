@@ -3,7 +3,7 @@
  * devx-specific shapes. Anything that already exists in `@atproto/api` is
  * imported from there (e.g. strong refs, profile views) rather than redefined.
  */
-import type { AppBskyActorDefs, ComAtprotoRepoStrongRef } from '@atproto/api';
+import type { ComAtprotoRepoStrongRef } from '@atproto/api';
 
 /** Publication metadata for a `site.standard.publication` record. */
 export interface AtprotoPublicationConfig {
@@ -220,6 +220,49 @@ export interface CrosspostInput {
 /** Strong ref to a created Bluesky skeet (its AT-URI and CID). */
 export type CrosspostResult = ComAtprotoRepoStrongRef.Main;
 
+/** Shared actor shape for likes, reposts, comments, quotes. */
+export interface BlueskyActor {
+  did: string;
+  handle: string;
+  displayName?: string;
+  avatar?: string;
+  /** Public profile URL on bsky.app. */
+  profileUrl: string;
+}
+
+export interface PostLike {
+  actor: BlueskyActor;
+  likedAt: Date;
+}
+
+export interface PostRepost {
+  actor: BlueskyActor;
+  /** When the repost happened; the public API does not expose this per actor. */
+  repostedAt: Date;
+}
+
+export interface PostQuote {
+  uri: string;
+  text: string;
+  author: BlueskyActor;
+  quotedAt: Date;
+  sourceUrl: string;
+}
+
+export interface PostEngagement {
+  likeCount?: number;
+  repostCount?: number;
+  quoteCount?: number;
+  replyCount?: number;
+  bookmarkCount?: number;
+}
+
+export interface FetchReactionsOptions {
+  /** Page size. Default `50`. */
+  limit?: number;
+  cursor?: string;
+}
+
 /** A federated comment derived from a Bluesky post. */
 export interface Comment {
   /** AT-URI of the source post. */
@@ -228,8 +271,8 @@ export interface Comment {
   cid: string;
   /** Post text. */
   text: string;
-  /** Author profile (subset of `app.bsky.actor.defs#profileViewBasic`). */
-  author: Pick<AppBskyActorDefs.ProfileViewBasic, 'did' | 'handle' | 'displayName' | 'avatar'>;
+  /** Author profile. */
+  author: BlueskyActor;
   /** When the post was created. */
   createdAt: Date;
   /** Origin network. */
@@ -242,6 +285,12 @@ export interface Comment {
   likeCount?: number;
   /** Reply count, if available. */
   replyCount?: number;
+  /** Repost count, if available. */
+  repostCount?: number;
+  /** Quote count, if available. */
+  quoteCount?: number;
+  /** Bookmark count, if available. */
+  bookmarkCount?: number;
   /** Nested replies (populated by {@link buildCommentTree}). */
   replies?: Comment[];
 }

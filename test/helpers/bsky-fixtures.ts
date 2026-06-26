@@ -12,6 +12,9 @@ export interface PostViewOptions {
   rootUri?: string;
   likeCount?: number;
   replyCount?: number;
+  repostCount?: number;
+  quoteCount?: number;
+  bookmarkCount?: number;
 }
 
 /** Minimal but lexicon-valid app.bsky.feed.defs#postView. */
@@ -39,6 +42,9 @@ export function makePostView(opts: PostViewOptions): Record<string, unknown> {
     },
     likeCount: opts.likeCount ?? 0,
     replyCount: opts.replyCount ?? 0,
+    repostCount: opts.repostCount ?? 0,
+    quoteCount: opts.quoteCount ?? 0,
+    bookmarkCount: opts.bookmarkCount ?? 0,
     indexedAt: opts.createdAt ?? '2026-01-01T00:00:00.000Z',
   };
 }
@@ -54,5 +60,42 @@ export function makeThread(node: ThreadNode): Record<string, unknown> {
     $type: 'app.bsky.feed.defs#threadViewPost',
     post: makePostView(node.post),
     replies: (node.replies ?? []).map(makeThread),
+  };
+}
+
+export interface ProfileViewOptions {
+  did?: string;
+  handle?: string;
+  displayName?: string;
+  avatar?: string;
+  createdAt?: string;
+}
+
+/** Minimal app.bsky.actor.defs#profileView for likes/reposts mocks. */
+export function makeProfileView(opts: ProfileViewOptions = {}): Record<string, unknown> {
+  return {
+    did: opts.did ?? 'did:plc:author',
+    handle: opts.handle ?? 'author.bsky.social',
+    displayName: opts.displayName,
+    avatar: opts.avatar,
+    createdAt: opts.createdAt ?? '2026-01-01T00:00:00.000Z',
+  };
+}
+
+/** app.bsky.feed.getLikes#like entry. */
+export function makeLike(opts: {
+  handle?: string;
+  displayName?: string;
+  createdAt?: string;
+  indexedAt?: string;
+} = {}): Record<string, unknown> {
+  return {
+    $type: 'app.bsky.feed.getLikes#like',
+    actor: makeProfileView({
+      handle: opts.handle,
+      displayName: opts.displayName,
+    }),
+    createdAt: opts.createdAt ?? '2026-02-01T00:00:00.000Z',
+    indexedAt: opts.indexedAt ?? opts.createdAt ?? '2026-02-01T00:00:00.000Z',
   };
 }

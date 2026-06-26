@@ -26,6 +26,7 @@
     "./npm": "./release-config-npm.mjs",
     "./storybook/preview": "./storybook/preview.ts",
     "./atproto": "./atproto/index.ts",
+    "./atproto/components/*": "./atproto/components/*",
     "./test-runner": "./test/helpers/test-runner.js"
   },
   "files": [

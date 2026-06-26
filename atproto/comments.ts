@@ -1,5 +1,6 @@
 import { AppBskyFeedDefs, AtpAgent } from '@atproto/api';
 import type { AppBskyFeedPost } from '@atproto/api';
+import { actorFromProfile } from './reactions.js';
 import type { Comment, FetchCommentsOptions } from './types.js';
 
 export type { Comment } from './types.js';
@@ -14,18 +15,16 @@ function bskyPostToComment(post: AppBskyFeedDefs.PostView): Comment {
     uri: post.uri,
     cid: post.cid,
     text: record.text ?? '',
-    author: {
-      did: post.author.did,
-      handle: post.author.handle,
-      displayName: post.author.displayName,
-      avatar: post.author.avatar,
-    },
+    author: actorFromProfile(post.author),
     createdAt: new Date(record.createdAt ?? post.indexedAt),
     source: 'bluesky',
     sourceUrl: `https://bsky.app/profile/${post.author.handle}/post/${postId}`,
     parentUri: record.reply?.parent.uri,
     likeCount: post.likeCount,
     replyCount: post.replyCount,
+    repostCount: post.repostCount,
+    quoteCount: post.quoteCount,
+    bookmarkCount: post.bookmarkCount,
   };
 }
 

@@ -14,7 +14,11 @@ function comment(uri: string, createdAt: string, parentUri?: string): Comment {
     uri,
     cid: 'cid',
     text: uri,
-    author: { did: 'did:plc:a', handle: 'a.bsky.social' },
+    author: {
+      did: 'did:plc:a',
+      handle: 'a.bsky.social',
+      profileUrl: 'https://bsky.app/profile/a.bsky.social',
+    },
     createdAt: new Date(createdAt),
     source: 'bluesky',
     sourceUrl: `https://bsky.app/${uri}`,

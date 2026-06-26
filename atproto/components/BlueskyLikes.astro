@@ -1,0 +1,100 @@
+---
+import { fetchLikes, type PostLike } from '../reactions.js';
+import BlueskyUser from './BlueskyUser.astro';
+
+interface Props {
+  bskyPostUri?: string;
+  likes?: PostLike[];
+  title?: string;
+  class?: string;
+}
+
+const {
+  bskyPostUri,
+  likes: likesOverride,
+  title = 'Likes',
+  class: className = '',
+} = Astro.props;
+
+let likes: PostLike[] = likesOverride ?? [];
+let error: string | null = null;
+
+if (likesOverride === undefined && bskyPostUri) {
+  try {
+    ({ likes } = await fetchLikes(bskyPostUri));
+  } catch (e) {
+    error = e instanceof Error ? e.message : 'Failed to load likes';
+    console.error('Likes fetch error:', e);
+  }
+}
+---
+
+<section class:list={['bluesky-likes', className]}>
+  <header class="bluesky-likes-header">
+    <h2 class="bluesky-likes-title">
+      {title}
+      {likes.length > 0 && <span class="bluesky-likes-count">({likes.length})</span>}
+    </h2>
+  </header>
+
+  {!bskyPostUri && likesOverride === undefined && (
+    <p class="bluesky-likes-empty">Likes appear after the post is synced to Bluesky.</p>
+  )}
+
+  {bskyPostUri && error && <p class="bluesky-likes-error">Unable to load likes.</p>}
+
+  {(bskyPostUri || likesOverride !== undefined) && !error && likes.length === 0 && (
+    <p class="bluesky-likes-empty">No likes yet.</p>
+  )}
+
+  {likes.length > 0 && (
+    <ul class="bluesky-likes-list">
+      {likes.map((like) => (
+        <li class="bluesky-likes-item">
+          <BlueskyUser actor={like.actor} timestamp={like.likedAt} timestampLabel="liked" />
+        </li>
+      ))}
+    </ul>
+  )}
+</section>
+
+<style>
+  .bluesky-likes {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid color-mix(in srgb, CanvasText 15%, Canvas);
+  }
+
+  .bluesky-likes-header {
+    margin-bottom: 1rem;
+  }
+
+  .bluesky-likes-title {
+    margin: 0;
+    font-size: 1.25rem;
+  }
+
+  .bluesky-likes-count {
+    font-weight: normal;
+    opacity: 0.7;
+  }
+
+  .bluesky-likes-empty,
+  .bluesky-likes-error {
+    opacity: 0.85;
+    font-style: italic;
+  }
+
+  .bluesky-likes-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .bluesky-likes-item {
+    margin: 0;
+  }
+</style>

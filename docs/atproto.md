@@ -54,8 +54,8 @@ flowchart LR
 | Artifact | Purpose |
 |----------|---------|
 | `snath-devx atproto sync` | CLI — publish, dry-run, force, single-post, delete |
-| `@scottnath/devx/atproto` | `fetchComments`, `countComments`, `generateDocumentLinkTag`, types |
-| `devx-template` | `BlogPost.astro`, `BlogComments.astro`, blog content schema, CI hooks |
+| `@scottnath/devx/atproto` | `fetchComments`, `countComments`, `fetchLikes`, `fetchRepostedBy`, `fetchQuotes`, `fetchPostEngagement`, `generateDocumentLinkTag`, types |
+| `@scottnath/devx/atproto/components/*` | Shared Astro components: `BlogPost`, `BlogComments`, `BlueskyLikes`, `BlueskyReposts`, `BlueskyQuotes`, `BlueskyUser` |
 
 **Dependency:** `@atproto/api` only (via devx). No third-party Astro ATProto packages.
 
@@ -68,7 +68,7 @@ flowchart LR
 1. [ ] `public/.well-known/atproto-did` — plain DID line for domain identity
 2. [ ] `atproto.config.ts` — copy from [atproto.config.example.ts](atproto-examples/atproto.config.example.ts)
 3. [ ] Blog collection — see [content.config.example.ts](atproto-examples/content.config.example.ts)
-4. [ ] `BlogPost.astro` + `BlogComments.astro` — copy from devx-template
+4. [ ] Thin `BlogPost.astro` wrapper around `@scottnath/devx/atproto/components/BlogPost.astro` — see [Site integration](#site-integration)
 5. [ ] Credentials — `ATPROTO_APP_PASSWORD`, `ATP_IDENTIFIER` (env or `.env`)
 6. [ ] GitHub Actions secrets for CI sync — see [atproto-publish.workflow.snippet.yml](atproto-examples/atproto-publish.workflow.snippet.yml)
 7. [ ] GitHub Pages: `include-hidden-files: 'true'` on `upload-pages-artifact` so `.well-known` deploys
@@ -144,27 +144,48 @@ const blog = defineCollection({
 });
 ```
 
-### Post layout — document verification
+### Post layout — article + verification
+
+Import shared components from devx and wrap with your site `Layout`:
 
 ```astro
 ---
+import DevxBlogPost from '@scottnath/devx/atproto/components/BlogPost.astro';
+import Layout from './Layout.astro';
 import { generateDocumentLinkTag } from '@scottnath/devx/atproto';
-const linkTag = entry.data.atprotoRkey && did
-  ? generateDocumentLinkTag(did, entry.data.atprotoRkey)
-  : null;
+
+const documentLinkTag =
+  entry.data.atprotoRkey && did
+    ? generateDocumentLinkTag(did, entry.data.atprotoRkey)
+    : null;
 ---
-<Fragment slot="head">
-  {linkTag && <Fragment set:html={linkTag} />}
-</Fragment>
+<Layout title={entry.data.title} description={entry.data.description}>
+  <Fragment slot="head">
+    {documentLinkTag && <Fragment set:html={documentLinkTag} />}
+  </Fragment>
+  <DevxBlogPost
+    title={entry.data.title}
+    description={entry.data.description}
+    date={entry.data.date}
+    bskyPostUri={entry.data.bskyPostUri}
+    canonicalUrl={canonicalUrl}
+    ogImage={entry.data.ogImage}
+  >
+    <slot />
+  </DevxBlogPost>
+</Layout>
 ```
 
-Base layout needs `<slot name="head" />` in `<head>`.
+`DevxBlogPost` renders the article header/body plus federated **likes**, **reposts**, **quotes**, and **comments** at build time (static HTML). Rebuild after new Bluesky activity.
 
-### Federated comments
+Individual engagement components are also available:
 
-`BlogComments.astro` in the site template imports `fetchComments` from `@scottnath/devx/atproto`. Requires `bskyPostUri` in frontmatter (written by sync). Rebuild the site to refresh threads after new replies.
+```astro
+import BlogComments from '@scottnath/devx/atproto/components/BlogComments.astro';
+import BlueskyLikes from '@scottnath/devx/atproto/components/BlueskyLikes.astro';
+```
 
-Each published post gets a Bluesky **announcement skeet** (title + description + link). Replies on that skeet are the comment thread.
+### Document verification tag
 
 ---
 

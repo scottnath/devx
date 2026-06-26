@@ -1,0 +1,100 @@
+---
+import { fetchRepostedBy, type PostRepost } from '../reactions.js';
+import BlueskyUser from './BlueskyUser.astro';
+
+interface Props {
+  bskyPostUri?: string;
+  reposts?: PostRepost[];
+  title?: string;
+  class?: string;
+}
+
+const {
+  bskyPostUri,
+  reposts: repostsOverride,
+  title = 'Reposts',
+  class: className = '',
+} = Astro.props;
+
+let reposts: PostRepost[] = repostsOverride ?? [];
+let error: string | null = null;
+
+if (repostsOverride === undefined && bskyPostUri) {
+  try {
+    ({ reposts } = await fetchRepostedBy(bskyPostUri));
+  } catch (e) {
+    error = e instanceof Error ? e.message : 'Failed to load reposts';
+    console.error('Reposts fetch error:', e);
+  }
+}
+---
+
+<section class:list={['bluesky-reposts', className]}>
+  <header class="bluesky-reposts-header">
+    <h2 class="bluesky-reposts-title">
+      {title}
+      {reposts.length > 0 && <span class="bluesky-reposts-count">({reposts.length})</span>}
+    </h2>
+  </header>
+
+  {!bskyPostUri && repostsOverride === undefined && (
+    <p class="bluesky-reposts-empty">Reposts appear after the post is synced to Bluesky.</p>
+  )}
+
+  {bskyPostUri && error && <p class="bluesky-reposts-error">Unable to load reposts.</p>}
+
+  {(bskyPostUri || repostsOverride !== undefined) && !error && reposts.length === 0 && (
+    <p class="bluesky-reposts-empty">No reposts yet.</p>
+  )}
+
+  {reposts.length > 0 && (
+    <ul class="bluesky-reposts-list">
+      {reposts.map((repost) => (
+        <li class="bluesky-reposts-item">
+          <BlueskyUser actor={repost.actor} />
+        </li>
+      ))}
+    </ul>
+  )}
+</section>
+
+<style>
+  .bluesky-reposts {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid color-mix(in srgb, CanvasText 15%, Canvas);
+  }
+
+  .bluesky-reposts-header {
+    margin-bottom: 1rem;
+  }
+
+  .bluesky-reposts-title {
+    margin: 0;
+    font-size: 1.25rem;
+  }
+
+  .bluesky-reposts-count {
+    font-weight: normal;
+    opacity: 0.7;
+  }
+
+  .bluesky-reposts-empty,
+  .bluesky-reposts-error {
+    opacity: 0.85;
+    font-style: italic;
+  }
+
+  .bluesky-reposts-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .bluesky-reposts-item {
+    margin: 0;
+  }
+</style>

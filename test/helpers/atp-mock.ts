@@ -26,6 +26,12 @@ export interface AtpMockOptions {
   thread?: unknown;
   /** Posts returned from app.bsky.feed.searchPosts. */
   searchPosts?: unknown[];
+  /** Likes returned from app.bsky.feed.getLikes. */
+  likes?: unknown[];
+  /** Reposters returned from app.bsky.feed.getRepostedBy. */
+  repostedBy?: unknown[];
+  /** Quote posts returned from app.bsky.feed.getQuotes. */
+  quotes?: unknown[];
   /** When true, getPostThread responds 500 (to exercise error handling). */
   threadError?: boolean;
 }
@@ -153,6 +159,27 @@ export function installAtpMock(t: TestContext, opts: AtpMockOptions = {}): AtpMo
     }
     if (path.endsWith('/xrpc/app.bsky.feed.searchPosts')) {
       return json({ posts: opts.searchPosts ?? [] });
+    }
+    if (path.endsWith('/xrpc/app.bsky.feed.getLikes')) {
+      return json({
+        uri: u.searchParams.get('uri') ?? '',
+        likes: opts.likes ?? [],
+        cursor: undefined,
+      });
+    }
+    if (path.endsWith('/xrpc/app.bsky.feed.getRepostedBy')) {
+      return json({
+        uri: u.searchParams.get('uri') ?? '',
+        repostedBy: opts.repostedBy ?? [],
+        cursor: undefined,
+      });
+    }
+    if (path.endsWith('/xrpc/app.bsky.feed.getQuotes')) {
+      return json({
+        uri: u.searchParams.get('uri') ?? '',
+        posts: opts.quotes ?? [],
+        cursor: undefined,
+      });
     }
 
     return json({ error: 'NotMocked', message: `No mock for ${method} ${path}` }, 404);

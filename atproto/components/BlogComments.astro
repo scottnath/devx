@@ -1,0 +1,209 @@
+---
+/**
+ * Federated Bluesky comments — fetches via devx at build time.
+ * Requires `bskyPostUri` in post frontmatter (written by sync:atproto).
+ */
+import { fetchComments, countComments } from '../comments.js';
+import type { Comment } from '../types.js';
+import BlueskyUser from './BlueskyUser.astro';
+import { formatRelativeTime } from './_utils.js';
+
+interface Props {
+  bskyPostUri?: string;
+  canonicalUrl?: string;
+  maxDepth?: number;
+  title?: string;
+  showReplyLink?: boolean;
+  showLikeCounts?: boolean;
+  /** When provided, skip fetch (Storybook / tests). */
+  comments?: Comment[];
+  class?: string;
+}
+
+const {
+  bskyPostUri,
+  canonicalUrl,
+  maxDepth = 3,
+  title = 'Comments',
+  showReplyLink = true,
+  showLikeCounts = true,
+  comments: commentsOverride,
+  class: className = '',
+} = Astro.props;
+
+let comments: Comment[] = commentsOverride ?? [];
+let totalCount = 0;
+let error: string | null = null;
+
+if (commentsOverride === undefined && bskyPostUri) {
+  try {
+    comments = await fetchComments({ bskyPostUri, canonicalUrl, maxDepth });
+    totalCount = countComments(comments);
+  } catch (e) {
+    error = e instanceof Error ? e.message : 'Failed to load comments';
+    console.error('Comments fetch error:', e);
+  }
+} else if (commentsOverride !== undefined) {
+  totalCount = countComments(comments);
+}
+
+function getReplyUrl(): string | null {
+  if (!bskyPostUri) return null;
+  return `https://bsky.app/intent/compose?reply=${encodeURIComponent(bskyPostUri)}`;
+}
+
+const replyUrl = getReplyUrl();
+---
+
+<section class:list={['blog-comments', className]}>
+  <header class="blog-comments-header">
+    <h2 class="blog-comments-title">
+      {title}
+      {totalCount > 0 && <span class="blog-comments-count">({totalCount})</span>}
+    </h2>
+    {showReplyLink && replyUrl && (
+      <a href={replyUrl} target="_blank" rel="noopener noreferrer" class="blog-comments-reply">
+        Reply on Bluesky →
+      </a>
+    )}
+  </header>
+
+  {!bskyPostUri && commentsOverride === undefined && (
+    <p class="blog-comments-empty">
+      Comments appear after the post is synced to Bluesky (<code>npm run sync:atproto</code>).
+    </p>
+  )}
+
+  {bskyPostUri && commentsOverride === undefined && error && (
+    <p class="blog-comments-error">Unable to load comments.</p>
+  )}
+
+  {(bskyPostUri || commentsOverride !== undefined) && !error && comments.length === 0 && (
+    <p class="blog-comments-empty">
+      No comments yet.
+      {replyUrl && (
+        <>
+          {' '}
+          <a href={replyUrl} target="_blank" rel="noopener noreferrer">
+            Be the first to reply on Bluesky!
+          </a>
+        </>
+      )}
+    </p>
+  )}
+
+  {(bskyPostUri || commentsOverride !== undefined) && !error && comments.length > 0 && (
+    <div class="blog-comments-list">
+      {
+        comments.map(function renderComment(comment: Comment, depth = 0) {
+          return (
+            <article class="blog-comment" style={`--depth: ${depth}`}>
+              <header class="blog-comment-header">
+                <BlueskyUser actor={comment.author} class="blog-comment-user" />
+                <a
+                  href={comment.sourceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="blog-comment-time"
+                >
+                  {formatRelativeTime(comment.createdAt)}
+                </a>
+              </header>
+              <div class="blog-comment-body">
+                <p>{comment.text}</p>
+                {showLikeCounts && comment.likeCount != null && comment.likeCount > 0 && (
+                  <p class="blog-comment-likes">{comment.likeCount} likes</p>
+                )}
+              </div>
+              {comment.replies && comment.replies.length > 0 && (
+                <div class="blog-comment-replies">
+                  {comment.replies.map((reply: Comment) => renderComment(reply, depth + 1))}
+                </div>
+              )}
+            </article>
+          );
+        })
+      }
+    </div>
+  )}
+</section>
+
+<style>
+  .blog-comments {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid color-mix(in srgb, CanvasText 15%, Canvas);
+  }
+
+  .blog-comments-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+  }
+
+  .blog-comments-title {
+    margin: 0;
+    font-size: 1.5rem;
+  }
+
+  .blog-comments-count {
+    font-weight: normal;
+    opacity: 0.7;
+  }
+
+  .blog-comments-empty,
+  .blog-comments-error {
+    opacity: 0.85;
+    font-style: italic;
+  }
+
+  .blog-comments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .blog-comment {
+    padding-left: calc(var(--depth, 0) * 1.25rem);
+  }
+
+  .blog-comment-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.35rem;
+  }
+
+  .blog-comment-user :global(.bluesky-user-time) {
+    display: none;
+  }
+
+  .blog-comment-time {
+    margin-left: auto;
+    font-size: 0.875rem;
+    opacity: 0.7;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .blog-comment-body p {
+    margin: 0;
+    white-space: pre-wrap;
+  }
+
+  .blog-comment-likes {
+    margin: 0.35rem 0 0;
+    font-size: 0.875rem;
+    opacity: 0.7;
+  }
+
+  .blog-comment-replies {
+    margin-top: 0.75rem;
+    padding-left: 0.75rem;
+    border-left: 2px solid color-mix(in srgb, CanvasText 15%, Canvas);
+  }
+</style>
