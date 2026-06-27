@@ -1,7 +1,7 @@
 /**
  * Shared types for the devx atproto module — the single source of truth for
- * devx-specific shapes. Anything that already exists in `@atproto/api` is
- * imported from there (e.g. strong refs, profile views) rather than redefined.
+ * devx-specific shapes. Anything that already exists in `@atproto/api` (or
+ * `@atproto/common-web`) is imported from there rather than redefined.
  */
 import type { ComAtprotoRepoStrongRef } from '@atproto/api';
 
@@ -188,19 +188,6 @@ export interface CreatedDocument {
   uri: string;
   /** Parsed rkey of the new document. */
   rkey: string;
-}
-
-/**
- * Minimal DID document shape — only the `service` entries we read to discover a
- * PDS endpoint. (`@atproto/api` does not export a DID document type.)
- */
-export interface DidDocument {
-  /** Declared services, including the `#atproto_pds` endpoint. */
-  service?: Array<{
-    id?: string;
-    type?: string;
-    serviceEndpoint?: string;
-  }>;
 }
 
 /** Input for {@link createBlueskyTeaser}. */

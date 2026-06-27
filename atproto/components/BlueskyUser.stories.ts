@@ -1,5 +1,6 @@
 import preview from '../../astro/.storybook/preview';
 import type { AstroComponentFactory } from '@storybook-astro/renderer/types';
+import { scottnathCom } from '../../test/helpers/bsky-users/index.js';
 import BlueskyUser from './BlueskyUser.astro';
 
 const meta = preview.meta({
@@ -9,24 +10,14 @@ const meta = preview.meta({
 
 export const Default = meta.story({
   args: {
-    actor: {
-      did: 'did:plc:alice',
-      handle: 'alice.bsky.social',
-      displayName: 'Alice',
-      profileUrl: 'https://bsky.app/profile/alice.bsky.social',
-    },
+    actor: scottnathCom.actor,
   },
 });
 
 export const WithTimestamp = meta.story({
   args: {
-    actor: {
-      did: 'did:plc:alice',
-      handle: 'alice.bsky.social',
-      displayName: 'Alice',
-      profileUrl: 'https://bsky.app/profile/alice.bsky.social',
-    },
-    timestamp: new Date('2026-06-01T12:00:00.000Z'),
+    actor: scottnathCom.actor,
+    timestamp: new Date(scottnathCom.welcomePost!.likedAt!),
     timestampLabel: 'liked',
   },
 });

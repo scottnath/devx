@@ -1,7 +1,7 @@
 import { AtpAgent } from '@atproto/api';
+import { getPdsEndpoint, isValidDidDoc } from '@atproto/common-web';
 import type {
   CreatedDocument,
-  DidDocument,
   DocumentInput,
   PublicationInput,
   PublicationSummary,
@@ -175,7 +175,7 @@ async function resolveHandle(handle: string): Promise<string> {
 
 /** Resolve a DID to its PDS service endpoint via plc.directory or did:web. */
 async function getPdsFromDid(did: string): Promise<string> {
-  let didDoc: DidDocument;
+  let didDoc: unknown;
   if (did.startsWith('did:plc:')) {
     const res = await fetch(`https://plc.directory/${did}`);
     if (!res.ok) throw new Error(`Failed to resolve DID: ${did}`);
@@ -188,11 +188,10 @@ async function getPdsFromDid(did: string): Promise<string> {
   } else {
     throw new Error(`Unsupported DID method: ${did}`);
   }
-  const pds = didDoc.service?.find(
-    (s) => s.type === 'AtprotoPersonalDataServer' || s.id === '#atproto_pds',
-  );
-  if (!pds?.serviceEndpoint) throw new Error(`No PDS found for ${did}`);
-  return pds.serviceEndpoint;
+  if (!isValidDidDoc(didDoc)) throw new Error(`Invalid DID document for ${did}`);
+  const endpoint = getPdsEndpoint(didDoc);
+  if (!endpoint) throw new Error(`No PDS found for ${did}`);
+  return endpoint;
 }
 
 /** Resolve an identifier (handle or DID) to its PDS service endpoint. */

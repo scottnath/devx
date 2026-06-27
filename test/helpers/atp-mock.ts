@@ -55,7 +55,8 @@ function json(body: unknown, status = 200): Response {
   });
 }
 
-const pdsService = (endpoint: string) => ({
+const pdsService = (endpoint: string, did: string) => ({
+  id: did,
   service: [
     {
       id: '#atproto_pds',
@@ -109,7 +110,7 @@ export function installAtpMock(t: TestContext, opts: AtpMockOptions = {}): AtpMo
       return json({ did });
     }
     if (u.host === 'plc.directory' || path.endsWith('/.well-known/did.json')) {
-      return json(pdsService(pds));
+      return json(pdsService(pds, did));
     }
     if (path.endsWith('/xrpc/com.atproto.server.createSession')) {
       return json({

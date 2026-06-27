@@ -7,18 +7,19 @@ import {
   type Comment,
 } from './comments.js';
 import { installAtpMock } from '../test/helpers/atp-mock.js';
-import { makePostView, makeThread } from '../test/helpers/bsky-fixtures.js';
+import { makeThread, replyPostOptions } from '../test/helpers/bsky-fixtures.js';
+import {
+  marijuanaSchool,
+  scottnathCom,
+  welcomePostUri,
+} from '../test/helpers/bsky-users/index.js';
 
 function comment(uri: string, createdAt: string, parentUri?: string): Comment {
   return {
     uri,
     cid: 'cid',
     text: uri,
-    author: {
-      did: 'did:plc:a',
-      handle: 'a.bsky.social',
-      profileUrl: 'https://bsky.app/profile/a.bsky.social',
-    },
+    author: scottnathCom.actor,
     createdAt: new Date(createdAt),
     source: 'bluesky',
     sourceUrl: `https://bsky.app/${uri}`,
@@ -71,60 +72,36 @@ describe('fetchComments', () => {
   });
 
   it('transforms a Bluesky thread into a nested comment tree', async (t) => {
-    const rootUri = 'at://did:plc:author/app.bsky.feed.post/root';
     installAtpMock(t, {
       thread: makeThread({
-        post: { uri: rootUri, text: 'root post' },
+        post: { uri: welcomePostUri, text: 'root post' },
         replies: [
           {
-            post: {
-              uri: 'at://did:plc:author/app.bsky.feed.post/a',
-              text: 'reply a',
-              handle: 'alice.bsky.social',
-              createdAt: '2026-02-01T00:00:00.000Z',
-              parentUri: rootUri,
-            },
-            replies: [
-              {
-                post: {
-                  uri: 'at://did:plc:author/app.bsky.feed.post/a1',
-                  text: 'reply a1',
-                  createdAt: '2026-03-01T00:00:00.000Z',
-                  parentUri: 'at://did:plc:author/app.bsky.feed.post/a',
-                },
-              },
-            ],
+            post: replyPostOptions(scottnathCom, welcomePostUri),
           },
           {
-            post: {
-              uri: 'at://did:plc:author/app.bsky.feed.post/b',
-              text: 'reply b',
-              createdAt: '2026-01-01T00:00:00.000Z',
-              parentUri: rootUri,
-            },
+            post: replyPostOptions(marijuanaSchool, welcomePostUri),
           },
         ],
       }),
     });
 
-    const comments = await fetchComments({ bskyPostUri: rootUri });
-    assert.strictEqual(countComments(comments), 3);
-    // root excluded; b (Jan) sorts before a (Feb)
-    assert.deepStrictEqual(comments.map((c) => c.text), ['reply b', 'reply a']);
-    const replyA = comments.find((c) => c.text === 'reply a')!;
-    assert.strictEqual(replyA.author.handle, 'alice.bsky.social');
-    assert.strictEqual(replyA.source, 'bluesky');
+    const comments = await fetchComments({ bskyPostUri: welcomePostUri });
+    assert.strictEqual(countComments(comments), 2);
+    assert.deepStrictEqual(comments.map((c) => c.text), ['do better', 'What is this slackiness?']);
+    const scottReply = comments.find((c) => c.text === 'do better')!;
+    assert.strictEqual(scottReply.author.handle, 'scottnath.com');
+    assert.strictEqual(scottReply.source, 'bluesky');
     assert.strictEqual(
-      replyA.sourceUrl,
-      'https://bsky.app/profile/alice.bsky.social/post/a',
+      scottReply.sourceUrl,
+      'https://bsky.app/profile/scottnath.com/post/3mp62vhjcs22m',
     );
-    assert.deepStrictEqual(replyA.replies?.map((c) => c.text), ['reply a1']);
   });
 
   it('returns [] for a not-found thread', async (t) => {
     installAtpMock(t); // default thread is notFoundPost
     const comments = await fetchComments({
-      bskyPostUri: 'at://did:plc:test/app.bsky.feed.post/missing',
+      bskyPostUri: welcomePostUri,
     });
     assert.deepStrictEqual(comments, []);
   });
@@ -132,40 +109,27 @@ describe('fetchComments', () => {
   it('swallows thread fetch errors and returns []', async (t) => {
     t.mock.method(console, 'error', () => {});
     installAtpMock(t, { threadError: true });
-    const comments = await fetchComments({ bskyPostUri: 'at://did/app.bsky.feed.post/x' });
+    const comments = await fetchComments({ bskyPostUri: welcomePostUri });
     assert.deepStrictEqual(comments, []);
   });
 
   it('does not call searchPosts for canonicalUrl (public API returns 403)', async (t) => {
-    const rootUri = 'at://did:plc:author/app.bsky.feed.post/root';
     const mock = installAtpMock(t, {
       thread: makeThread({
-        post: { uri: rootUri, text: 'root' },
+        post: { uri: welcomePostUri, text: 'root' },
         replies: [
           {
-            post: {
-              uri: 'at://did:plc:author/app.bsky.feed.post/a',
-              text: 'a reply',
-              createdAt: '2026-01-01T00:00:00.000Z',
-              parentUri: rootUri,
-            },
+            post: replyPostOptions(scottnathCom, welcomePostUri),
           },
         ],
       }),
-      searchPosts: [
-        makePostView({
-          uri: 'at://did:plc:other/app.bsky.feed.post/mention',
-          text: 'a mention',
-          createdAt: '2026-04-01T00:00:00.000Z',
-        }),
-      ],
     });
 
     const comments = await fetchComments({
-      bskyPostUri: rootUri,
-      canonicalUrl: 'https://example.com/blog/post/',
+      bskyPostUri: welcomePostUri,
+      canonicalUrl: 'https://slacktivist.com/blog/welcome/',
     });
-    assert.deepStrictEqual(comments.map((c) => c.text), ['a reply']);
+    assert.deepStrictEqual(comments.map((c) => c.text), ['do better']);
     assert.strictEqual(mock.callsTo('/xrpc/app.bsky.feed.searchPosts').length, 0);
   });
 });

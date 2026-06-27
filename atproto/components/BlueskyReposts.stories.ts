@@ -1,5 +1,6 @@
 import preview from '../../astro/.storybook/preview';
 import type { AstroComponentFactory } from '@storybook-astro/renderer/types';
+import { chiitanLove } from '../../test/helpers/bsky-users/index.js';
 import BlueskyReposts from './BlueskyReposts.astro';
 
 const meta = preview.meta({
@@ -7,16 +8,12 @@ const meta = preview.meta({
   component: BlueskyReposts as unknown as AstroComponentFactory,
 });
 
+/** No reposts on the welcome skeet; chiitan.love liked it and stands in for layout demos. */
 export const WithMockReposts = meta.story({
   args: {
     reposts: [
       {
-        actor: {
-          did: 'did:plc:carol',
-          handle: 'carol.bsky.social',
-          displayName: 'Carol',
-          profileUrl: 'https://bsky.app/profile/carol.bsky.social',
-        },
+        actor: chiitanLove.actor,
         repostedAt: new Date(0),
       },
     ],

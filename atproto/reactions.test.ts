@@ -8,42 +8,44 @@ import {
   fetchRepostedBy,
 } from './reactions.js';
 import { installAtpMock } from '../test/helpers/atp-mock.js';
-import { makeLike, makePostView, makeProfileView, makeThread } from '../test/helpers/bsky-fixtures.js';
-
-const POST_URI = 'at://did:plc:author/app.bsky.feed.post/root';
+import {
+  makeLikeFromUser,
+  makeProfileViewFromUser,
+  makeQuotePostView,
+  makeThread,
+} from '../test/helpers/bsky-fixtures.js';
+import {
+  chiitanLove,
+  howspotdoingCom,
+  scottnathCom,
+  welcomePostUri,
+} from '../test/helpers/bsky-users/index.js';
 
 describe('actorFromProfile', () => {
   it('builds profileUrl from handle', () => {
-    const actor = actorFromProfile({
-      did: 'did:plc:alice',
-      handle: 'alice.bsky.social',
-      displayName: 'Alice',
-    });
-    assert.strictEqual(actor.profileUrl, 'https://bsky.app/profile/alice.bsky.social');
-    assert.strictEqual(actor.displayName, 'Alice');
+    const actor = actorFromProfile(scottnathCom.profileView);
+    assert.strictEqual(actor.profileUrl, 'https://bsky.app/profile/scottnath.com');
+    assert.strictEqual(actor.displayName, 'Scott Nath 🚫🧊');
   });
 });
 
 describe('fetchLikes', () => {
   it('maps likes from getLikes', async (t) => {
     installAtpMock(t, {
-      likes: [
-        makeLike({ handle: 'alice.bsky.social', displayName: 'Alice', createdAt: '2026-02-01T00:00:00.000Z' }),
-        makeLike({ handle: 'bob.bsky.social', createdAt: '2026-03-01T00:00:00.000Z' }),
-      ],
+      likes: [makeLikeFromUser(scottnathCom), makeLikeFromUser(chiitanLove)],
     });
 
-    const { likes } = await fetchLikes(POST_URI);
+    const { likes } = await fetchLikes(welcomePostUri);
     assert.strictEqual(likes.length, 2);
-    assert.strictEqual(likes[0].actor.handle, 'alice.bsky.social');
-    assert.strictEqual(likes[0].actor.profileUrl, 'https://bsky.app/profile/alice.bsky.social');
-    assert.strictEqual(likes[0].likedAt.toISOString(), '2026-02-01T00:00:00.000Z');
+    assert.strictEqual(likes[0].actor.handle, 'scottnath.com');
+    assert.strictEqual(likes[0].actor.profileUrl, 'https://bsky.app/profile/scottnath.com');
+    assert.strictEqual(likes[0].likedAt.toISOString(), scottnathCom.welcomePost!.likedAt);
   });
 
   it('returns [] on fetch error', async (t) => {
     t.mock.method(console, 'error', () => {});
     installAtpMock(t);
-    const { likes } = await fetchLikes(POST_URI);
+    const { likes } = await fetchLikes(welcomePostUri);
     assert.deepStrictEqual(likes, []);
   });
 });
@@ -51,37 +53,28 @@ describe('fetchLikes', () => {
 describe('fetchRepostedBy', () => {
   it('maps reposters from getRepostedBy', async (t) => {
     installAtpMock(t, {
-      repostedBy: [
-        makeProfileView({ handle: 'reposter.bsky.social', displayName: 'Reposter' }),
-      ],
+      repostedBy: [makeProfileViewFromUser(chiitanLove)],
     });
 
-    const { reposts } = await fetchRepostedBy(POST_URI);
+    const { reposts } = await fetchRepostedBy(welcomePostUri);
     assert.strictEqual(reposts.length, 1);
-    assert.strictEqual(reposts[0].actor.handle, 'reposter.bsky.social');
+    assert.strictEqual(reposts[0].actor.handle, 'chiitan.love');
   });
 });
 
 describe('fetchQuotes', () => {
   it('maps quote posts from getQuotes', async (t) => {
     installAtpMock(t, {
-      quotes: [
-        makePostView({
-          uri: 'at://did:plc:quoter/app.bsky.feed.post/q1',
-          text: 'great post',
-          handle: 'quoter.bsky.social',
-          createdAt: '2026-04-01T00:00:00.000Z',
-        }),
-      ],
+      quotes: [makeQuotePostView(howspotdoingCom)],
     });
 
-    const { quotes } = await fetchQuotes(POST_URI);
+    const { quotes } = await fetchQuotes(welcomePostUri);
     assert.strictEqual(quotes.length, 1);
-    assert.strictEqual(quotes[0].text, 'great post');
-    assert.strictEqual(quotes[0].author.handle, 'quoter.bsky.social');
+    assert.strictEqual(quotes[0].text, '@marijuana.school see?');
+    assert.strictEqual(quotes[0].author.handle, 'howspotdoing.com');
     assert.strictEqual(
       quotes[0].sourceUrl,
-      'https://bsky.app/profile/quoter.bsky.social/post/q1',
+      'https://bsky.app/profile/howspotdoing.com/post/3mp6y5gvfq22m',
     );
   });
 });
@@ -91,30 +84,30 @@ describe('fetchPostEngagement', () => {
     installAtpMock(t, {
       thread: makeThread({
         post: {
-          uri: POST_URI,
-          text: 'announcement',
-          likeCount: 3,
-          repostCount: 2,
+          uri: welcomePostUri,
+          text: 'This is a post about nothing. I did not have time to post.',
+          likeCount: 4,
+          repostCount: 0,
           quoteCount: 1,
-          replyCount: 5,
-          bookmarkCount: 4,
+          replyCount: 2,
+          bookmarkCount: 0,
         },
       }),
     });
 
-    const engagement = await fetchPostEngagement(POST_URI);
+    const engagement = await fetchPostEngagement(welcomePostUri);
     assert.deepStrictEqual(engagement, {
-      likeCount: 3,
-      repostCount: 2,
+      likeCount: 4,
+      repostCount: 0,
       quoteCount: 1,
-      replyCount: 5,
-      bookmarkCount: 4,
+      replyCount: 2,
+      bookmarkCount: 0,
     });
   });
 
   it('returns {} for a not-found thread', async (t) => {
     installAtpMock(t);
-    const engagement = await fetchPostEngagement(POST_URI);
+    const engagement = await fetchPostEngagement(welcomePostUri);
     assert.deepStrictEqual(engagement, {});
   });
 });
