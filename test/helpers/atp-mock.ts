@@ -149,6 +149,16 @@ export function installAtpMock(t: TestContext, opts: AtpMockOptions = {}): AtpMo
     if (path.endsWith('/xrpc/com.atproto.repo.deleteRecord')) {
       return json({});
     }
+    if (path.endsWith('/xrpc/com.atproto.repo.uploadBlob')) {
+      return json({
+        blob: {
+          $type: 'blob',
+          ref: { $link: VALID_CID },
+          mimeType: 'image/png',
+          size: 1024,
+        },
+      });
+    }
     if (path.endsWith('/xrpc/app.bsky.feed.getPostThread')) {
       if (opts.threadError) return json({ error: 'InternalServerError' }, 500);
       const thread = opts.thread ?? {

@@ -5,12 +5,48 @@
  */
 import type { ComAtprotoRepoStrongRef } from '@atproto/api';
 
+/**
+ * An RGB color, accepted either as a `#rrggbb`/`#rgb` hex string or an explicit
+ * `{ r, g, b }` object (each channel 0–255). Serialized to
+ * `site.standard.theme.color#rgb`.
+ */
+export type RgbColorInput = string | { r: number; g: number; b: number };
+
+/**
+ * Basic publication theme colors, mapped to `site.standard.theme.basic`. Apps
+ * use these to render your content in your palette.
+ */
+export interface AtprotoBasicTheme {
+  /** Links and button backgrounds. */
+  accent: RgbColorInput;
+  /** Content background. */
+  background: RgbColorInput;
+  /** Content text. */
+  foreground: RgbColorInput;
+  /** Button text. */
+  accentForeground: RgbColorInput;
+}
+
 /** Publication metadata for a `site.standard.publication` record. */
 export interface AtprotoPublicationConfig {
-  /** Human-readable name of the publication. */
+  /** Human-readable name of the publication (≤500 graphemes). */
   name: string;
-  /** Optional publication description. */
+  /** Optional publication description (≤3000 graphemes). */
   description?: string;
+  /**
+   * Path (relative to cwd) to a square icon image — `image/*`, ≤1MB, ideally
+   * ≥256×256. Uploaded as a blob and set as the publication `icon`.
+   */
+  iconPath?: string;
+  /** Optional basic theme colors for `site.standard.theme.basic`. */
+  theme?: AtprotoBasicTheme;
+  /** Optional self-labels (content warnings) for the publication. */
+  labels?: string[];
+  /**
+   * Whether the publication appears in discovery feeds. Omit to inherit the
+   * lexicon default (`true`).
+   */
+  showInDiscover?: boolean;
 }
 
 /** Consumer-supplied configuration for {@link syncToAtproto} (Workflow A). */
@@ -138,14 +174,26 @@ export interface PublicationInput {
   name: string;
   /** Optional description. */
   description?: string;
+  /** Path (relative to cwd) to a square icon image to upload as a blob. */
+  iconPath?: string;
+  /** Optional basic theme colors. */
+  theme?: AtprotoBasicTheme;
+  /** Optional self-labels (content warnings). */
+  labels?: string[];
+  /** Whether the publication appears in discovery feeds. */
+  showInDiscover?: boolean;
 }
 
 /** A publication record summary returned when listing publications. */
 export interface PublicationSummary {
   /** AT-URI of the publication record. */
   uri: string;
+  /** Record key parsed from the AT-URI. */
+  rkey: string;
   /** Canonical site URL stored on the record. */
   url: string;
+  /** The full stored record value (used to decide whether an update is needed). */
+  value: Record<string, unknown>;
 }
 
 /** Input for creating/updating a `site.standard.document` record. */

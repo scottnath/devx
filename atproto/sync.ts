@@ -98,11 +98,18 @@ export async function syncToAtproto(
 
   let publicationAtUri: string;
   if (client) {
-    publicationAtUri = await client.ensurePublication({
-      url: siteUrl,
-      name: config.publication.name,
-      description: config.publication.description,
-    });
+    publicationAtUri = await client.ensurePublication(
+      {
+        url: siteUrl,
+        name: config.publication.name,
+        description: config.publication.description,
+        iconPath: resolveThumbPath(cwd, config.publication.iconPath),
+        theme: config.publication.theme,
+        labels: config.publication.labels,
+        showInDiscover: config.publication.showInDiscover,
+      },
+      { force: args.force },
+    );
     console.log(`Publication: ${publicationAtUri}`);
     writePublicationWellKnown(wellKnownDir, publicationAtUri);
   } else {

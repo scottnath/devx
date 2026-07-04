@@ -11,6 +11,20 @@ export default {
   publication: {
     name: 'Example Blog',
     description: 'Long-form posts from example.com',
+    // Square icon (image/*, <=1MB, ideally >=256x256). Shown in Bluesky's
+    // enhanced Standard.site preview. Uploaded once; use `sync --force` to replace.
+    iconPath: 'public/images/publication-icon.png',
+    // Optional palette apps use to render your content (hex or {r,g,b}).
+    theme: {
+      accent: '#3366ff',
+      background: '#ffffff',
+      foreground: '#111111',
+      accentForeground: '#ffffff',
+    },
+    // Optional self-labels / content warnings.
+    // labels: ['!warn'],
+    // Set false to opt the publication out of discovery feeds (default true).
+    // showInDiscover: true,
   },
   statePath: 'atproto-state.json',
   syndicationPath: 'atproto-syndication.json',

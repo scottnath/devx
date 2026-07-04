@@ -90,9 +90,26 @@ Copy [atproto.config.example.ts](atproto-examples/atproto.config.example.ts). Ke
 | `identifier` | Handle or DID; falls back to `ATP_IDENTIFIER` env |
 | `contentDir` | Blog markdown directory |
 | `postPathPrefix` | URL prefix, e.g. `/blog` |
-| `publication` | Name and description for `site.standard.publication` |
+| `publication` | Metadata for `site.standard.publication` (see below) |
 
-On first sync, devx ensures the publication record exists and writes `public/.well-known/site.standard.publication`.
+On first sync, devx ensures the publication record exists and writes `public/.well-known/site.standard.publication`. On later syncs it updates the record in place whenever the metadata below changes.
+
+#### `publication` fields
+
+Maps to the [`site.standard.publication`](https://standard.site/) lexicon:
+
+| Field | Type | Purpose |
+|-------|------|---------|
+| `name` | string | Publication name (≤500 graphemes) — **required** |
+| `description` | string | Brief description (≤3000 graphemes) |
+| `iconPath` | string | Path (relative to cwd) to a square icon — `image/*`, ≤1MB, ideally ≥256×256. Uploaded as a blob; shown in Bluesky's enhanced [Standard.site preview](https://atproto.com/blog/standard-site-bluesky-timeline) |
+| `theme` | object | `accent`, `background`, `foreground`, `accentForeground` colors (hex string or `{ r, g, b }`), written as `site.standard.theme.basic` |
+| `labels` | string[] | Self-labels / content warnings (`com.atproto.label.defs#selfLabels`) |
+| `showInDiscover` | boolean | Appear in discovery feeds; omit to inherit the lexicon default (`true`) |
+
+The `url` on the record is derived from `siteUrl` — you don't set it in `publication`.
+
+**Icon updates:** the icon blob is uploaded once (when the record has none yet). Run `sync --force` to replace an existing icon.
 
 ### Environment variables
 

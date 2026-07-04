@@ -30,28 +30,31 @@ describe('AtprotoClient.login', () => {
   });
 });
 
-describe('AtprotoClient.ensurePublication', () => {
-  it('returns the existing publication uri when the url matches', async (t) => {
-    installAtpMock(t, {
-      did: DID,
-      publications: [
-        {
-          uri: `at://${DID}/site.standard.publication/self`,
-          value: { url: 'https://example.com', name: 'Example' },
-        },
-      ],
-    });
-    const client = await AtprotoClient.login(DID, 'pw');
-    const uri = await client.ensurePublication({ url: 'https://example.com', name: 'Example' });
-    assert.strictEqual(uri, `at://${DID}/site.standard.publication/self`);
-  });
-
-  it('creates a publication when none matches', async (t) => {
+describe('AtprotoClient publication delegation', () => {
+  // Publication behavior is covered in publication.test.ts; these assert the
+  // client methods delegate to that module with the agent and DID.
+  it('ensurePublication creates a record through the publication module', async (t) => {
     const mock = installAtpMock(t, { did: DID, publications: [] });
     const client = await AtprotoClient.login(DID, 'pw');
     const uri = await client.ensurePublication({ url: 'https://new.com', name: 'New' });
     assert.match(uri, /site\.standard\.publication/);
     assert.strictEqual(mock.callsTo('/xrpc/com.atproto.repo.createRecord').length, 1);
+  });
+
+  it('listPublications returns record summaries', async (t) => {
+    installAtpMock(t, {
+      did: DID,
+      publications: [
+        {
+          uri: `at://${DID}/site.standard.publication/self`,
+          value: { $type: 'site.standard.publication', url: 'https://example.com', name: 'Example' },
+        },
+      ],
+    });
+    const client = await AtprotoClient.login(DID, 'pw');
+    const pubs = await client.listPublications();
+    assert.strictEqual(pubs.length, 1);
+    assert.strictEqual(pubs[0].url, 'https://example.com');
   });
 });
 

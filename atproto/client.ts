@@ -1,5 +1,6 @@
 import { AtpAgent } from '@atproto/api';
 import { getPdsEndpoint, isValidDidDoc } from '@atproto/common-web';
+import { ensurePublication, isPresent, listPublications } from './publication.js';
 import type {
   CreatedDocument,
   DocumentInput,
@@ -44,40 +45,16 @@ export class AtprotoClient {
   }
 
   /**
-   * Return the AT-URI of the publication matching `input.url`, creating it if
-   * none exists.
+   * Ensure the `site.standard.publication` record for `input.url` exists and is
+   * up to date. See {@link ensurePublication} in `publication.ts`.
    */
-  async ensurePublication(input: PublicationInput): Promise<string> {
-    const agent = this.getAgent();
-    const existing = await this.listPublications();
-    const match = existing.find((p) => p.url === input.url);
-    if (match) return match.uri;
-
-    const res = await agent.com.atproto.repo.createRecord({
-      repo: this.did,
-      collection: 'site.standard.publication',
-      record: {
-        $type: 'site.standard.publication',
-        url: input.url,
-        name: input.name,
-        description: input.description,
-      },
-    });
-    return res.data.uri;
+  async ensurePublication(input: PublicationInput, options: { force?: boolean } = {}): Promise<string> {
+    return ensurePublication(this.getAgent(), this.did, input, options);
   }
 
   /** List all `site.standard.publication` records in the repo. */
   async listPublications(): Promise<PublicationSummary[]> {
-    const agent = this.getAgent();
-    const res = await agent.com.atproto.repo.listRecords({
-      repo: this.did,
-      collection: 'site.standard.publication',
-      limit: 50,
-    });
-    return res.data.records.map((r) => ({
-      uri: r.uri,
-      url: (r.value as { url?: string }).url ?? '',
-    }));
+    return listPublications(this.getAgent(), this.did);
   }
 
   /** List all `site.standard.document` records in the repo. */
@@ -154,13 +131,6 @@ function documentRecord(
     ...extra,
   };
   return Object.fromEntries(Object.entries(record).filter(([, v]) => isPresent(v)));
-}
-
-/** Keep fields that should be written to the PDS record. */
-function isPresent(value: unknown): boolean {
-  if (value === undefined || value === null || value === '') return false;
-  if (Array.isArray(value) && value.length === 0) return false;
-  return true;
 }
 
 /** Resolve a handle to its DID via the public API. */
