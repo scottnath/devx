@@ -65,7 +65,7 @@ Add `@scottnath/devx` as a devDependency. All semantic-release plugins come tran
     "@scottnath/devx": "^1.0.0",
     "typescript": "^6.0.3"
   },
-  "engines": { "node": ">=24.0.0" }
+  "engines": { "node": ">=26.0.0" }
 }
 ```
 
@@ -222,4 +222,4 @@ const linkTag = entry.data.atprotoRkey && did
 
 ## Node
 
-Use Node 24 (`.nvmrc` contains `24`).
+Use Node 26 (`.nvmrc` contains `26`).

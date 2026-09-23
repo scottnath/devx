@@ -213,7 +213,7 @@ const notes = defineAtProtoCollection({
 | Order | Publish → commit state → build → deploy |
 | State commit-back | `[skip ci]` + bot guard |
 | GitHub Pages `.well-known` | `include-hidden-files: 'true'` on upload artifact |
-| Node | `>=24` (devx standard) |
+| Node | `>=26` (devx standard) |
 
 ---
 

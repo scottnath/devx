@@ -248,7 +248,7 @@ Typical order: **sync → commit state/frontmatter → build → deploy**.
 
 Secrets: `ATPROTO_APP_PASSWORD`, `ATP_IDENTIFIER`. Optional variable: `BLUESKY_CROSSPOST`.
 
-Commit bot should use `[skip ci]` on state commits. Node `>=24`.
+Commit bot should use `[skip ci]` on state commits. Node `>=26`.
 
 ---
 
