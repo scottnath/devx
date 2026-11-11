@@ -1,0 +1,4 @@
+{
+  "peer": true,
+  "doctorTest": "npm run verify"
+}

@@ -1,6 +1,6 @@
 # AT Protocol for devx Astro sites
 
-Connect an **Astro 6** static site (GitHub Pages, [devx-template](https://github.com/scottnath/devx-template) shape) to the [ATmosphere](https://atproto.com/): publish long-form posts as [standard.site](https://standard.site/) documents, optionally announce them on Bluesky, and show federated comment threads on your blog pages.
+Connect an **Astro** static site (GitHub Pages, [devx-template](https://github.com/scottnath/devx-template) shape) to the [ATmosphere](https://atproto.com/): publish long-form posts as [standard.site](https://standard.site/) documents, optionally announce them on Bluesky, and show federated comment threads on your blog pages.
 
 Implementation lives in `@scottnath/devx` — CLI plus a small library on `@atproto/api`. Site-specific layout and content schema live in the template repo.
 

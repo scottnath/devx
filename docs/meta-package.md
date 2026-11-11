@@ -128,8 +128,8 @@ Reference site (devx `astro/`) is **living documentation** — copy patterns int
 | Piece | Role |
 |-------|------|
 | `@scottnath/devx` | Meta-package on GitHub Packages |
-| `dependencies` | Astro, Storybook, semantic-release stack |
-| `exports` | Gitmoji release presets (`/`, `/npm`) |
+| `dependencies` | Astro, Storybook, semantic-release, AT Protocol stack — kept current via [dependency-updates.md](dependency-updates.md) |
+| `exports` | Gitmoji release presets (`/`, `/npm`), Storybook preview (`/storybook/preview`), AT Protocol library and components (`/atproto`, `/atproto/components/*`), test runner (`/test-runner`) |
 | `astro/` workspace | Reference site + Storybook; not published |
 | Consumer `demos` | `devDependencies: @scottnath/devx`, scripts-only `astro/` workspace |
 

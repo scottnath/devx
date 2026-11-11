@@ -15,6 +15,9 @@
     "build": "npm run build -w devx-site",
     "build-storybook": "npm run build-storybook -w devx-site",
     "test": "node --import tsx test.config.js --coverage",
+    "verify": "npm run extract:rules && npm test && npm run typecheck && npm run build && npm run build-storybook",
+    "deps:check": "ncu",
+    "deps:update": "ncu --doctor -u && npm update && npm run verify && node scripts/deps-commit-message.mjs",
     "sync:atproto": "node --import tsx cli/index.ts atproto sync",
     "sync:atproto:dry-run": "node --import tsx cli/index.ts atproto sync --dry-run"
   },
@@ -33,6 +36,7 @@
     "release-config.mjs",
     "release-config-npm.mjs",
     "release-rules.mjs",
+    "release-notes.mjs",
     "release.config.mjs",
     "storybook",
     "cli",
@@ -41,30 +45,31 @@
     "!atproto/**/*.test.ts",
     "docs",
     "scripts",
+    "!scripts/**/*.test.ts",
     "test/helpers/test-runner.js"
   ],
   "dependencies": {
-    "@astrojs/check": "0.9.10",
-    "@atproto/api": "0.20.44",
-    "@atproto/common-web": "0.5.12",
+    "@astrojs/check": "0.9.12",
+    "@atproto/api": "0.31.0",
+    "@atproto/common-web": "0.5.17",
     "@semantic-release/changelog": "7.0.0",
     "@semantic-release/github": "12.0.10",
     "@semantic-release/npm": "13.2.0",
-    "@storybook-astro/framework": "1.12.0",
-    "@storybook-astro/renderer": "1.12.0",
-    "@storybook/builder-vite": "10.6.0",
-    "astro": "7.3.4",
+    "@storybook-astro/framework": "1.15.0",
+    "@storybook-astro/renderer": "1.15.0",
+    "@storybook/builder-vite": "10.6.7",
+    "astro": "7.4.10",
     "astro-seo": "1.2.0",
-    "commander": "15.0.0",
-    "dotenv": "18.0.3",
+    "commander": "15.1.0",
+    "dotenv": "18.0.10",
     "gitmojis": "3.15.0",
-    "marked": "18.0.14",
+    "marked": "18.2.0",
     "semantic-release": "25.0.9",
     "semantic-release-gitmoji": "1.6.9",
-    "storybook": "10.6.0",
+    "storybook": "10.6.7",
     "tsx": "4.23.15",
     "typescript": "6.0.3",
-    "zod": "4.6.5"
+    "zod": "4.6.7"
   },
   "engines": {
     "node": ">=26.0.0"
@@ -75,5 +80,8 @@
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
+  },
+  "devDependencies": {
+    "npm-check-updates": "23.1.1"
   }
 }

@@ -33,7 +33,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Verify package
-        run: npm run extract:rules
+        run: npm run verify
 
       - name: Release
         env:

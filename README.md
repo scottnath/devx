@@ -41,6 +41,8 @@ export default { extends: '@scottnath/devx/npm' };
 
 Add `@scottnath/devx` as a devDependency. All semantic-release plugins come transitively.
 
+Release notes group commits into Breaking Changes, New Features, Bug Fixes, Critical Hotfixes, Security Issues, and Dependency Updates. Commit body lines of the form `- name: 1.0.0 → 1.1.0` are listed under their commit, so a dependency bump shows exactly what moved. Details: [docs/release.md](docs/release.md).
+
 ## Astro (TypeScript)
 
 `astro`, `@astrojs/check`, Storybook packages, etc. come transitively via `@scottnath/devx`. Add `typescript` to your repo `devDependencies`.
@@ -62,7 +64,7 @@ Add `@scottnath/devx` as a devDependency. All semantic-release plugins come tran
     "build-storybook": "npm run build-storybook -w site"
   },
   "devDependencies": {
-    "@scottnath/devx": "^1.0.0",
+    "@scottnath/devx": "^2.0.0",
     "typescript": "^6.0.3"
   },
   "engines": { "node": ">=26.0.0" }
@@ -156,6 +158,26 @@ export const Default = meta.story({
 });
 ```
 
+## Test runner
+
+A small wrapper around Node's built-in `node:test` runner — no Jest or Vitest.
+
+**`test.config.js`:**
+
+```javascript
+import { runNodeTests } from '@scottnath/devx/test-runner';
+
+runNodeTests({ testDir: 'src' });
+```
+
+**`package.json` script:**
+
+```json
+"test": "node --import tsx test.config.js --coverage"
+```
+
+Finds `*.test.ts` files under `testDir` and runs them with the spec reporter. Options: [test/README.md](test/README.md).
+
 ## Gitmoji commits
 
 Repos using `@scottnath/devx` use [Gitmoji](https://gitmoji.dev) commit messages for semantic-release.
@@ -223,3 +245,16 @@ const linkTag = entry.data.atprotoRkey && did
 ## Node
 
 Use Node 26 (`.nvmrc` contains `26`).
+
+## Working on devx
+
+Start with [AGENTS.md](AGENTS.md): a map of the repo, the commands, and the rules. Each directory has its own README.
+
+```bash
+npm ci
+npm run verify       # rules, tests, typecheck, site build, Storybook build
+npm run deps:check   # list available updates (npm-check-updates)
+npm run deps:update  # upgrade, verify, and write the changelog-ready commit message
+```
+
+Dependency updates follow [docs/dependency-updates.md](docs/dependency-updates.md).
