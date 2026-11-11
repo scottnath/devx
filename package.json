@@ -15,6 +15,9 @@
     "build": "npm run build -w devx-site",
     "build-storybook": "npm run build-storybook -w devx-site",
     "test": "node --import tsx test.config.js --coverage",
+    "verify": "npm run extract:rules && npm test && npm run typecheck && npm run build && npm run build-storybook",
+    "deps:check": "ncu",
+    "deps:update": "ncu --doctor -u && npm update && npm run verify && node scripts/deps-commit-message.mjs",
     "sync:atproto": "node --import tsx cli/index.ts atproto sync",
     "sync:atproto:dry-run": "node --import tsx cli/index.ts atproto sync --dry-run"
   },
@@ -33,6 +36,7 @@
     "release-config.mjs",
     "release-config-npm.mjs",
     "release-rules.mjs",
+    "release-notes.mjs",
     "release.config.mjs",
     "storybook",
     "cli",
@@ -41,6 +45,7 @@
     "!atproto/**/*.test.ts",
     "docs",
     "scripts",
+    "!scripts/**/*.test.ts",
     "test/helpers/test-runner.js"
   ],
   "dependencies": {
@@ -75,5 +80,8 @@
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
+  },
+  "devDependencies": {
+    "npm-check-updates": "23.1.1"
   }
 }
